@@ -56,6 +56,19 @@ export function Hero() {
         {/* Never display a frozen robot pose on desktop: the real Spline robot
             starts moving as it loads, so swapping from a photo creates an
             obvious change in body pose and missing limbs. */}
+        {/* A real, alpha-matted frame from this exact Spline model is shown on
+            first paint. Its placement matches the live canvas and there are
+            no baked-in rectangular edges or mismatched synthetic robot. */}
+        <div className={`hero-robot-standin ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
+          <img
+            src="/heyrin-robot-instant.webp"
+            alt=""
+            width={864}
+            height={900}
+            fetchPriority="high"
+            decoding="async"
+          />
+        </div>
         <div className={`hero-signal-loader ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
           <div className="hero-signal-loader-ring hero-signal-loader-ring-a" />
           <div className="hero-signal-loader-ring hero-signal-loader-ring-b" />
@@ -67,7 +80,7 @@ export function Hero() {
         </div>
         {/* Mobile has no WebGL character; keep a small static picture there. */}
         <div className="hero-mobile-poster" aria-hidden="true">
-          <img src="/hero-spline-transparent.webp" alt="" width={393} height={665} loading="lazy" decoding="async" />
+          <img src="/heyrin-robot-instant.webp" alt="" width={864} height={900} loading="eager" decoding="async" />
         </div>
         <Suspense fallback={null}>
           <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
