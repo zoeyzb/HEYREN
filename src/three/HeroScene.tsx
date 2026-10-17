@@ -1,7 +1,11 @@
-import { Suspense } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
+import type { Application } from '@splinetool/runtime';
 import * as THREE from 'three';
-import { RobotCharacter } from './RobotCharacter';
+import { FloatingIndicators, ProcessingRings, SignalParticles, VoiceWaveform3D } from './Effects';
+
+const Spline = lazy(() => import('@splinetool/react-spline'));
+const SPLINE_SCENE = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
 
 interface HeroSceneProps {
   listening?: boolean;
@@ -11,39 +15,66 @@ interface HeroSceneProps {
   onReady?: () => void;
 }
 
-function SceneContent({ listening, speaking, activated }: HeroSceneProps) {
+function Atmosphere({ speaking, listening, active }: HeroSceneProps) {
   return (
-    <>
-      <color attach="background" args={['#050607']} />
-      <ambientLight intensity={0.58} color="#9aa7a4" />
-      <hemisphereLight intensity={0.42} color="#d8e2df" groundColor="#0b0d0f" />
-      <directionalLight position={[2.8, 4.5, 4]} intensity={1.35} color="#e3ece7" />
-      <pointLight position={[0, 0.5, 4.6]} intensity={1.45} color="#c4d0cb" distance={9} />
-      <pointLight position={[-2.6, 1.7, 2.8]} intensity={1.15} color="#7552b6" distance={7} />
-      <pointLight position={[2.5, -1.4, 3.2]} intensity={0.85} color="#b9ff32" distance={6} />
-      <mesh position={[0, -0.15, -1.4]}>
-        <circleGeometry args={[2.35, 40]} />
-        <meshBasicMaterial color="#0c1315" transparent opacity={0.54} />
-      </mesh>
-      <RobotCharacter listening={listening} speaking={speaking} activated={activated} />
-    </>
+    <Canvas
+      dpr={[1, 1.25]}
+      frameloop={active ? 'always' : 'never'}
+      camera={{ position: [0, 0, 6], fov: 40 }}
+      gl={{ alpha: true, antialias: false, powerPreference: 'high-performance', stencil: false, depth: false }}
+      style={{ background: 'transparent' }}
+    >
+      <ProcessingRings />
+      <SignalParticles count={42} />
+      <VoiceWaveform3D speaking={speaking} listening={listening} />
+      <FloatingIndicators />
+    </Canvas>
   );
 }
 
-export function HeroScene({ listening, speaking, activated, active = true, onReady }: HeroSceneProps) {
-  const maxDpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 1.2);
+export function HeroScene({ listening, speaking, active = true, onReady }: HeroSceneProps) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
+  const appRef = useRef<Application | null>(null);
+  const maxDpr = useMemo(() => typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 1.25), []);
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener?.('change', update);
+    return () => query.removeEventListener?.('change', update);
+  }, []);
+
+  useEffect(() => {
+    const app = appRef.current;
+    if (!app) return;
+    if (active) app.play();
+    else app.stop();
+  }, [active]);
+
+  if (isMobile) return null;
+
+  const handleSplineLoad = (app: Application) => {
+    appRef.current = app;
+    app.renderOnDemand = true;
+    app.setGlobalEvents(false);
+    requestAnimationFrame(() => app.stop());
+    onReady?.();
+  };
+
+  const wakeSpline = () => appRef.current?.play();
+  const sleepSpline = () => appRef.current?.stop();
+
   return (
-    <Canvas
-      dpr={[1, maxDpr]}
-      frameloop={active ? 'always' : 'never'}
-      camera={{ position: [0, 0, 6.2], fov: 38 }}
-      gl={{ alpha: true, antialias: false, powerPreference: 'high-performance', stencil: false, depth: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
-      onCreated={() => onReady?.()}
-      style={{ background: 'transparent' }}
-    >
-      <Suspense fallback={null}>
-        <SceneContent listening={listening} speaking={speaking} activated={activated} />
-      </Suspense>
-    </Canvas>
+    <div className="hero-spline-stack" aria-label="Interactive Heyrin AI character">
+      <div className="hero-spline-character" onPointerEnter={wakeSpline} onPointerLeave={sleepSpline}>
+        <Suspense fallback={null}>
+          <Spline scene={SPLINE_SCENE} className="h-full w-full" renderOnDemand onLoad={handleSplineLoad} />
+        </Suspense>
+      </div>
+      <div className="hero-spline-atmosphere" aria-hidden="true">
+        <Atmosphere speaking={speaking} listening={listening} active={active} />
+      </div>
+    </div>
   );
 }

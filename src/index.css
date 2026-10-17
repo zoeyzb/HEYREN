@@ -220,3 +220,12 @@ body {
 .hero-scene .hero-static-preview + canvas { opacity: 1; }
 .hero-scene.is-ready .hero-static-preview { pointer-events: none; }
 @media (max-width: 767px) { .static-robot-halo { width: 92vw; } .static-robot-head { width: 52vw; } .static-robot-shoulders { width: 86vw; } .static-robot-chest { width: 58vw; } }
+
+/* Spline hero layering: character first, original orbital atmosphere above it. */
+.hero-spline-stack { position: absolute; inset: 0; isolation: isolate; }
+.hero-spline-character { position: absolute; inset: 0; z-index: 1; }
+.hero-spline-character > div, .hero-spline-character canvas { width: 100% !important; height: 100% !important; background: transparent !important; }
+.hero-spline-atmosphere { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.hero-spline-atmosphere canvas { width: 100% !important; height: 100% !important; }
+.hero-scene.is-ready .hero-static-preview { opacity: .04; }
+@media (max-width: 767px) { .hero-spline-stack { display: none; } .hero-scene:not(.is-ready) .hero-static-preview { opacity: .94; } }
