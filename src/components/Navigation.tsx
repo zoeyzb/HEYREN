@@ -15,6 +15,7 @@ export function Navigation() {
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
+    handler();
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
@@ -22,7 +23,7 @@ export function Navigation() {
   const handleNav = (href: string) => {
     setMenuOpen(false);
     const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: 'smooth' });
+    el?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   };
 
   return (
@@ -70,7 +71,9 @@ export function Navigation() {
           <button
             className="md:hidden text-soft"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
+            aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={menuOpen}
+            aria-controls="heyrin-mobile-navigation"
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -79,7 +82,7 @@ export function Navigation() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden bg-ink-base/95 backdrop-blur-xl flex flex-col items-center justify-center gap-6">
+        <div id="heyrin-mobile-navigation" className="fixed inset-0 z-40 md:hidden bg-ink-base/95 backdrop-blur-xl flex flex-col items-center justify-center gap-6">
           {NAV_LINKS.map((link) => (
             <button
               key={link.href}

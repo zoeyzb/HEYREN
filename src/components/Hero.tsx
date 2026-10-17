@@ -28,6 +28,8 @@ export function Hero() {
   }, []);
 
   useLayoutEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) return;
     const context = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: 'power3.out' } });
       intro
@@ -42,8 +44,11 @@ export function Hero() {
     return () => context.revert();
   }, []);
 
-  const scrollToExperience = () => document.querySelector('#experience')?.scrollIntoView({ behavior: 'smooth' });
-  const scrollToContact = () => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollTo = (selector: string) => document.querySelector(selector)?.scrollIntoView({
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+  });
+  const scrollToExperience = () => scrollTo('#experience');
+  const scrollToContact = () => scrollTo('#contact');
 
   return (
     <section ref={heroRef} id="home" className="hero-shell relative min-h-screen w-full overflow-hidden bg-ink-base">

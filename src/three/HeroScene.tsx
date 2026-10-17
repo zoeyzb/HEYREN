@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { Application } from '@splinetool/runtime';
 import { FloatingIndicators, ProcessingRings, SignalParticles, VoiceWaveform3D } from './Effects';
@@ -34,13 +34,22 @@ function Atmosphere({ speaking, listening, active }: HeroSceneProps) {
 
 export function HeroScene({ listening, speaking, active = true, onReady }: HeroSceneProps) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
+  const [atmosphereReady, setAtmosphereReady] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const atmosphereTimer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (atmosphereTimer.current !== null) window.clearTimeout(atmosphereTimer.current);
+  }, []);
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 767px)');
-    const update = () => setIsMobile(query.matches);
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => { setIsMobile(query.matches); setReducedMotion(motionQuery.matches); };
     update();
     query.addEventListener?.('change', update);
-    return () => query.removeEventListener?.('change', update);
+    motionQuery.addEventListener?.('change', update);
+    return () => { query.removeEventListener?.('change', update); motionQuery.removeEventListener?.('change', update); };
   }, []);
 
   if (isMobile) return null;
@@ -56,6 +65,9 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
         window.setTimeout(() => {
           app.setZoom(SPLINE_ZOOM);
           onReady?.();
+          // Never compete with Spline's asset/renderer initialization.
+          // Mount the secondary WebGL atmosphere after the character is shown.
+          atmosphereTimer.current = window.setTimeout(() => setAtmosphereReady(true), 900);
         }, 1800);
       });
     });
@@ -68,9 +80,11 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
           <Spline scene={SPLINE_SCENE} className="h-full w-full" onLoad={handleSplineLoad} />
         </Suspense>
       </div>
-      <div className="hero-spline-atmosphere" aria-hidden="true">
-        <Atmosphere speaking={speaking} listening={listening} active={active} />
-      </div>
+      {atmosphereReady && active && !reducedMotion && (
+        <div className="hero-spline-atmosphere" aria-hidden="true">
+          <Atmosphere speaking={speaking} listening={listening} active={active} />
+        </div>
+      )}
     </div>
   );
 }
