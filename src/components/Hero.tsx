@@ -54,14 +54,7 @@ export function Hero() {
 
       <div ref={sceneRef} className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
         <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
-          <div className="static-robot-halo" />
-          <div className="static-robot-neck" />
-          <div className="static-robot-head">
-            <div className="static-robot-visor"><i /><i /></div>
-            <span className="static-robot-sensor" />
-          </div>
-          <div className="static-robot-shoulders" />
-          <div className="static-robot-chest"><span /></div>
+          <img className="hero-static-preview-image" src="/hero-spline-preview.webp" alt="" />
         </div>
         <Suspense fallback={null}>
           <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
