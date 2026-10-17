@@ -1,15 +1,14 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import gsap from 'gsap';
 
 const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default: m.HeroScene })));
 
 export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
+  const [motionPreviewReady, setMotionPreviewReady] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
-  const sceneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -27,21 +26,22 @@ export function Hero() {
     return () => observer.disconnect();
   }, []);
 
-  useLayoutEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducedMotion) return;
-    const context = gsap.context(() => {
-      const intro = gsap.timeline({ defaults: { ease: 'power3.out' } });
-      intro
-        .fromTo('.hero-eyebrow', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 })
-        .fromTo('.hero-heading', { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.95 }, '-=0.42')
-        .fromTo('.hero-copy', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, '-=0.52')
-        .fromTo('.hero-actions', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.65 }, '-=0.4')
-        .fromTo('.hero-meta', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55 }, '-=0.3');
-      gsap.fromTo(sceneRef.current, { opacity: 0, x: 56, scale: 0.92 }, { opacity: 1, x: 0, scale: 1, duration: 1.35, delay: 0.15, ease: 'power4.out' });
-      gsap.to('.hero-orbit-glow', { scale: 1.08, opacity: 0.72, duration: 3.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
-    }, heroRef);
-    return () => context.revert();
+  // Critical hero content is visible on the first paint. Do not use GSAP
+  // fromTo(opacity:0): WebGL initialization can stall the first animation
+  // frame and leave headings, CTAs, and the robot invisible for seconds.
+
+  // Preload the 20 real Spline poses as one lightweight sprite. CSS moves
+  // between frames reliably even when Chrome suspends animated WebP playback.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let alive = true;
+    const sprite = new Image();
+    sprite.src = '/heyrin-robot-motion-sprite.webp';
+    const ready = () => { if (alive) setMotionPreviewReady(true); };
+    sprite.decode().then(ready).catch(() => {
+      if (sprite.complete && sprite.naturalWidth > 0) ready();
+    });
+    return () => { alive = false; };
   }, []);
 
   const scrollTo = (selector: string) => document.querySelector(selector)?.scrollIntoView({
@@ -57,22 +57,22 @@ export function Hero() {
       <div className="absolute -left-32 top-[24%] h-[34rem] w-[34rem] rounded-full bg-lime/5 blur-[130px] pointer-events-none" />
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
-      <div ref={sceneRef} className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
-        {/* Never display a frozen robot pose on desktop: the real Spline robot
-            starts moving as it loads, so swapping from a photo creates an
-            obvious change in body pose and missing limbs. */}
-        {/* A real, alpha-matted frame from this exact Spline model is shown on
-            first paint. Its placement matches the live canvas and there are
-            no baked-in rectangular edges or mismatched synthetic robot. */}
+      <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
+        {/* First paint is a lightweight frame from the real scene, followed by
+            an alpha-matted loop recorded from the very same Spline animation.
+            Unlike the previous static poster, the robot is already moving while
+            the 3D engine starts; the layers crossfade when Spline is ready. */}
         <div className={`hero-robot-standin ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
           <img
-            src="/heyrin-robot-instant.webp"
+            className="hero-robot-first-frame"
+            src="/heyrin-robot-motion-poster.webp"
             alt=""
-            width={864}
-            height={900}
+            width={480}
+            height={500}
             fetchPriority="high"
             decoding="async"
           />
+          <div className={`hero-robot-motion ${motionPreviewReady ? 'is-active' : ''}`} />
         </div>
         <div className={`hero-signal-loader ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
           <div className="hero-signal-loader-ring hero-signal-loader-ring-a" />
@@ -83,9 +83,11 @@ export function Hero() {
             <span className="hero-signal-loader-activity"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span>
           </div>
         </div>
-        {/* Mobile has no WebGL character; keep a small static picture there. */}
+        {/* Mobile has no WebGL character: the same animated transparent preview
+            runs without downloading the large Spline runtime. */}
         <div className="hero-mobile-poster" aria-hidden="true">
-          <img src="/heyrin-robot-instant.webp" alt="" width={864} height={900} loading="eager" decoding="async" />
+          <img src="/heyrin-robot-motion-poster.webp" alt="" width={480} height={500} loading="eager" decoding="async" />
+          <div className={`hero-robot-motion ${motionPreviewReady ? 'is-active' : ''}`} />
         </div>
         <Suspense fallback={null}>
           <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
