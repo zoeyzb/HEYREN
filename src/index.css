@@ -203,13 +203,32 @@ body {
 @media (max-width: 1023px) { .hero-scene { width: 59%; min-width: 500px; opacity: .96; } .hero-vignette { background: linear-gradient(90deg, rgba(5,6,7,.42) 0%, rgba(5,6,7,.1) 54%, rgba(5,6,7,.45) 100%), linear-gradient(180deg, rgba(5,6,7,.02) 55%, #050607 100%); } }
 @media (max-width: 767px) { .hero-shell { min-height: 860px; } .hero-content { align-items: flex-start; padding-top: 8.5rem; } .hero-copy-column { max-width: 100%; } .hero-scene { top: 48%; bottom: auto; right: -7%; width: 114%; min-width: 0; height: 52%; opacity: .9; mask-image: linear-gradient(180deg, transparent 0%, black 18%, black 72%, transparent 100%); -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 18%, black 72%, transparent 100%); } .hero-vignette { background: linear-gradient(180deg, rgba(5,6,7,.08) 0%, rgba(5,6,7,.08) 36%, rgba(5,6,7,.86) 62%, #050607 88%); } .hero-orbit-glow { right: -30%; top: 36%; height: 24rem; width: 24rem; } .hero-meta { margin-top: 13rem; } }
 
-/* Lightweight preview captured from the actual Spline humanoid. */
-.hero-static-preview { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 1; overflow: hidden; transition: opacity .42s ease; z-index: 2; }
-.hero-static-preview.is-hidden { opacity: 0; }
-.hero-static-preview-image { display: block; width: auto; height: 88%; max-height: 780px; max-width: 100%; object-fit: contain; object-position: center; -webkit-mask-image: radial-gradient(ellipse 68% 73% at 50% 43%, #000 48%, transparent 99%); mask-image: radial-gradient(ellipse 68% 73% at 50% 43%, #000 48%, transparent 99%); filter: drop-shadow(0 0 38px rgba(57,45,93,.16)); animation: heyrin-poster-breathe 5s ease-in-out infinite alternate; transform: translateY(1%); }
-@keyframes heyrin-poster-breathe { from { transform: translateY(1%) scale(1); } to { transform: translateY(-.25%) scale(1.012); } }
-@media (prefers-reduced-motion: reduce) { .hero-static-preview-image { animation: none; } }
-.hero-scene.is-ready .hero-static-preview { pointer-events: none; }
+/* The loading state is an ambient voice signal, NOT a fake or static robot.
+   It occupies the same visual field as Spline but never changes body shape. */
+.hero-signal-loader { position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none;opacity:1;transition:opacity .7s ease; }
+.hero-signal-loader.is-hidden { opacity:0;visibility:hidden;transition:opacity .7s ease,visibility 0s .7s; }
+.hero-signal-loader-ring { position:absolute;left:50%;top:49%;border:1px solid rgba(185,255,50,.19);border-radius:50%;transform:translate(-50%,-50%) rotate(-16deg);filter:drop-shadow(0 0 11px rgba(185,255,50,.10)); }
+.hero-signal-loader-ring-a { width:min(77%,620px);height:24%;animation:heyrin-signal-orbit-a 8s ease-in-out infinite alternate; }
+.hero-signal-loader-ring-b { width:min(71%,560px);height:34%;border-color:rgba(161,107,255,.2);transform:translate(-50%,-50%) rotate(37deg);animation:heyrin-signal-orbit-b 11s ease-in-out infinite alternate; }
+.hero-signal-loader-center { position:relative;display:flex;flex-direction:column;align-items:center;gap:13px;min-width:152px;transform:translateY(-6px); }
+.hero-signal-loader-light { display:block;width:37px;height:37px;border-radius:50%;border:1px solid rgba(185,255,50,.25);background:radial-gradient(circle,#b9ff32 0 2px,rgba(185,255,50,.25) 4px,rgba(185,255,50,.05) 12px,transparent 18px);box-shadow:0 0 55px rgba(185,255,50,.1),inset 0 0 15px rgba(185,255,50,.11);animation:heyrin-loader-breathe 2s ease-in-out infinite alternate; }
+.hero-signal-loader-label { color:rgba(191,209,183,.52);font:8px/1.5 'JetBrains Mono',monospace;letter-spacing:.22em;white-space:nowrap; }
+.hero-signal-loader-activity { height:18px;display:flex;align-items:center;gap:4px;opacity:.65; }
+.hero-signal-loader-activity i {display:block;width:2px;height:4px;background:#b9ff32;border-radius:3px;animation:heyrin-loader-bars .7s ease-in-out infinite alternate; }
+.hero-signal-loader-activity i:nth-child(2n) { animation-delay:-.43s;background:#a16bff }
+.hero-signal-loader-activity i:nth-child(3n) { animation-delay:-.22s }
+.hero-signal-loader-activity i:nth-child(4n) { animation-delay:-.57s }
+.hero-mobile-poster { display:none; }
+@keyframes heyrin-loader-breathe {to{transform:scale(1.1);box-shadow:0 0 70px rgba(185,255,50,.16),inset 0 0 24px rgba(185,255,50,.18)}}
+@keyframes heyrin-loader-bars {to{height:17px;opacity:1}}
+@keyframes heyrin-signal-orbit-a {to{transform:translate(-50%,-50%) rotate(-2deg) scale(1.03)}}
+@keyframes heyrin-signal-orbit-b {to{transform:translate(-50%,-50%) rotate(19deg) scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.hero-signal-loader-ring,.hero-signal-loader-light,.hero-signal-loader-activity i{animation:none!important}}
+@media(max-width:767px){
+  .hero-signal-loader{display:none}
+  .hero-mobile-poster{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;overflow:hidden;z-index:2;}
+  .hero-mobile-poster img{display:block;width:auto;height:94%;max-width:120%;object-fit:contain;-webkit-mask-image:radial-gradient(ellipse 68% 73% at 50% 43%,#000 48%,transparent 99%);mask-image:radial-gradient(ellipse 68% 73% at 50% 43%,#000 48%,transparent 99%);transform:translateY(8%);}
+}
 
 /* Spline hero layering: character first, original orbital atmosphere above it. */
 .hero-spline-stack { position: absolute; inset: 0; isolation: isolate; z-index: 1; }

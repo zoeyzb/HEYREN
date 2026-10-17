@@ -53,8 +53,21 @@ export function Hero() {
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
       <div ref={sceneRef} className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
-        <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
-          <img className="hero-static-preview-image" src="/hero-spline-transparent.webp" alt="" width={393} height={665} loading="eager" decoding="async" />
+        {/* Never display a frozen robot pose on desktop: the real Spline robot
+            starts moving as it loads, so swapping from a photo creates an
+            obvious change in body pose and missing limbs. */}
+        <div className={`hero-signal-loader ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
+          <div className="hero-signal-loader-ring hero-signal-loader-ring-a" />
+          <div className="hero-signal-loader-ring hero-signal-loader-ring-b" />
+          <div className="hero-signal-loader-center">
+            <span className="hero-signal-loader-light" />
+            <span className="hero-signal-loader-label">VOICE INTELLIGENCE</span>
+            <span className="hero-signal-loader-activity"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span>
+          </div>
+        </div>
+        {/* Mobile has no WebGL character; keep a small static picture there. */}
+        <div className="hero-mobile-poster" aria-hidden="true">
+          <img src="/hero-spline-transparent.webp" alt="" width={393} height={665} loading="lazy" decoding="async" />
         </div>
         <Suspense fallback={null}>
           <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />

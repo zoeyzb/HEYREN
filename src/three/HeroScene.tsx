@@ -56,7 +56,7 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
         window.setTimeout(() => {
           app.setZoom(SPLINE_ZOOM);
           onReady?.();
-        }, 5000);
+        }, 1800);
       });
     });
   };
