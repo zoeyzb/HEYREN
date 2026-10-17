@@ -1,7 +1,18 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 
 const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default: m.HeroScene })));
+
+/** Spline can reject its remote scene request. Preserve the page and our
+ * locally hosted animated stand-in instead of unmounting the whole app. */
+class HeroSceneErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error: Error) {
+    if (import.meta.env.DEV) console.warn('3D robot unavailable; using animated preview.', error);
+  }
+  render() { return this.state.failed ? null : this.props.children; }
+}
 
 export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
@@ -89,9 +100,11 @@ export function Hero() {
           <img src="/heyrin-robot-motion-poster.webp" alt="" width={480} height={500} loading="eager" decoding="async" />
           <div className={`hero-robot-motion ${motionPreviewReady ? 'is-active' : ''}`} />
         </div>
-        <Suspense fallback={null}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
-        </Suspense>
+        <HeroSceneErrorBoundary>
+          <Suspense fallback={null}>
+            <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
+          </Suspense>
+        </HeroSceneErrorBoundary>
       </div>
 
       <div className="hero-content relative z-10 mx-auto flex min-h-screen max-w-[1440px] items-center px-6 pb-16 pt-28 sm:px-10 lg:px-14 xl:px-20">
