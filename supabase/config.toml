@@ -1,0 +1,2 @@
+[functions.contact-inquiry]
+verify_jwt = false
