@@ -206,7 +206,9 @@ body {
 /* Lightweight preview captured from the actual Spline humanoid. */
 .hero-static-preview { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 1; overflow: hidden; transition: opacity .42s ease; z-index: 2; }
 .hero-static-preview.is-hidden { opacity: 0; }
-.hero-static-preview-image { display: block; width: auto; height: 88%; max-height: 780px; max-width: 100%; object-fit: contain; mix-blend-mode: screen; -webkit-mask-image: radial-gradient(ellipse 78% 88% at 50% 50%, #000 52%, transparent 100%); mask-image: radial-gradient(ellipse 78% 88% at 50% 50%, #000 52%, transparent 100%); transform: translateY(1%); }
+.hero-static-preview-image { display: block; width: auto; height: 88%; max-height: 780px; max-width: 100%; object-fit: contain; object-position: center; -webkit-mask-image: radial-gradient(ellipse 68% 73% at 50% 43%, #000 48%, transparent 99%); mask-image: radial-gradient(ellipse 68% 73% at 50% 43%, #000 48%, transparent 99%); filter: drop-shadow(0 0 38px rgba(57,45,93,.16)); animation: heyrin-poster-breathe 5s ease-in-out infinite alternate; transform: translateY(1%); }
+@keyframes heyrin-poster-breathe { from { transform: translateY(1%) scale(1); } to { transform: translateY(-.25%) scale(1.012); } }
+@media (prefers-reduced-motion: reduce) { .hero-static-preview-image { animation: none; } }
 .hero-scene.is-ready .hero-static-preview { pointer-events: none; }
 
 /* Spline hero layering: character first, original orbital atmosphere above it. */
