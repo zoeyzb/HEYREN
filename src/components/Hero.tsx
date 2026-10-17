@@ -6,6 +6,8 @@ const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default:
 
 export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
+  const [sceneReady, setSceneReady] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
 
@@ -16,6 +18,13 @@ export function Hero() {
       setHeroState((prev) => (prev === 'idle' ? 'listening' : prev === 'listening' ? 'speaking' : 'idle'));
     }, 4200);
     return () => window.clearInterval(cycle);
+  }, []);
+
+  useEffect(() => {
+    if (!heroRef.current || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setHeroVisible(entry.isIntersecting), { threshold: 0.01 });
+    observer.observe(heroRef.current);
+    return () => observer.disconnect();
   }, []);
 
   useLayoutEffect(() => {
@@ -43,9 +52,19 @@ export function Hero() {
       <div className="absolute -left-32 top-[24%] h-[34rem] w-[34rem] rounded-full bg-lime/5 blur-[130px] pointer-events-none" />
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
-      <div ref={sceneRef} className="hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px]">
-        <Suspense fallback={<div className="h-full w-full" aria-hidden="true" />}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated />
+      <div ref={sceneRef} className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
+        <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
+          <div className="static-robot-halo" />
+          <div className="static-robot-neck" />
+          <div className="static-robot-head">
+            <div className="static-robot-visor"><i /><i /></div>
+            <span className="static-robot-sensor" />
+          </div>
+          <div className="static-robot-shoulders" />
+          <div className="static-robot-chest"><span /></div>
+        </div>
+        <Suspense fallback={null}>
+          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
         </Suspense>
       </div>
 
