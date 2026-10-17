@@ -17,7 +17,6 @@ class HeroSceneErrorBoundary extends Component<{ children: ReactNode }, { failed
 export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
-  const [motionPreviewReady, setMotionPreviewReady] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
 
@@ -41,20 +40,6 @@ export function Hero() {
   // fromTo(opacity:0): WebGL initialization can stall the first animation
   // frame and leave headings, CTAs, and the robot invisible for seconds.
 
-  // Preload the 20 real Spline poses as one lightweight sprite. CSS moves
-  // between frames reliably even when Chrome suspends animated WebP playback.
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let alive = true;
-    const sprite = new Image();
-    sprite.src = '/heyrin-robot-motion-sprite.webp';
-    const ready = () => { if (alive) setMotionPreviewReady(true); };
-    sprite.decode().then(ready).catch(() => {
-      if (sprite.complete && sprite.naturalWidth > 0) ready();
-    });
-    return () => { alive = false; };
-  }, []);
-
   const scrollTo = (selector: string) => document.querySelector(selector)?.scrollIntoView({
     behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
   });
@@ -69,21 +54,17 @@ export function Hero() {
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
       <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
-        {/* First paint is a lightweight frame from the real scene, followed by
-            an alpha-matted loop recorded from the very same Spline animation.
-            Unlike the previous static poster, the robot is already moving while
-            the 3D engine starts; the layers crossfade when Spline is ready. */}
+        {/* Restored original high-quality Spline robot preview. The low-resolution
+            sprite experiment has been removed; the live robot is unchanged. */}
         <div className={`hero-robot-standin ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
           <img
-            className="hero-robot-first-frame"
-            src="/heyrin-robot-motion-poster.webp"
+            src="/heyrin-robot-instant.webp"
             alt=""
-            width={480}
-            height={500}
+            width={864}
+            height={900}
             fetchPriority="high"
             decoding="async"
           />
-          <div className={`hero-robot-motion ${motionPreviewReady ? 'is-active' : ''}`} />
         </div>
         <div className={`hero-signal-loader ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
           <div className="hero-signal-loader-ring hero-signal-loader-ring-a" />
@@ -94,11 +75,9 @@ export function Hero() {
             <span className="hero-signal-loader-activity"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span>
           </div>
         </div>
-        {/* Mobile has no WebGL character: the same animated transparent preview
-            runs without downloading the large Spline runtime. */}
+        {/* Preserve the original clean robot on mobile without loading WebGL. */}
         <div className="hero-mobile-poster" aria-hidden="true">
-          <img src="/heyrin-robot-motion-poster.webp" alt="" width={480} height={500} loading="eager" decoding="async" />
-          <div className={`hero-robot-motion ${motionPreviewReady ? 'is-active' : ''}`} />
+          <img src="/heyrin-robot-instant.webp" alt="" width={864} height={900} loading="eager" decoding="async" />
         </div>
         <HeroSceneErrorBoundary>
           <Suspense fallback={null}>
