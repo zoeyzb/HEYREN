@@ -38,11 +38,11 @@ const FAQS = [
 ];
 
 export function FAQ() {
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
   const { ref, visible } = useFadeUp<HTMLDivElement>();
 
   return (
-    <section className="relative py-24 lg:py-32 bg-ink-base overflow-hidden">
+    <section className="heyrin-faq relative py-24 lg:py-32 bg-ink-base overflow-hidden">
       <div className="absolute inset-0 tech-grid opacity-15" />
 
       <div ref={ref} className={`relative max-w-[800px] mx-auto px-6 lg:px-10 fade-up ${visible ? 'visible' : ''}`}>
@@ -68,6 +68,9 @@ export function FAQ() {
                 }`}
               >
                 <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`heyrin-faq-answer-${idx}`}
                   onClick={() => setOpen(isOpen ? null : idx)}
                   className="w-full flex items-center justify-between px-5 py-4 text-left"
                 >
@@ -81,11 +84,9 @@ export function FAQ() {
                   </div>
                 </button>
                 <div
-                  className="overflow-hidden transition-all duration-400 ease-out"
-                  style={{
-                    maxHeight: isOpen ? '200px' : '0px',
-                    opacity: isOpen ? 1 : 0,
-                  }}
+                  id={`heyrin-faq-answer-${idx}`}
+                  className="heyrin-faq-answer"
+                  hidden={!isOpen}
                 >
                   <p className="px-5 pb-4 text-sm text-silver/70 leading-relaxed">{faq.a}</p>
                 </div>

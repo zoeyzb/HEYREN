@@ -6,7 +6,7 @@ const USE_CASES = [
   {
     icon: Home,
     industry: 'Home Services',
-    example: '"I need an emergency plumber for a burst pipe." — Heyrin dispatches the closest available technician and logs the urgency.',
+    example: '"I need an emergency plumber for a burst pipe." — Heyrin can gather the urgency, location, and callback details for an available technician.',
   },
   {
     icon: Scale,
@@ -16,12 +16,12 @@ const USE_CASES = [
   {
     icon: Building2,
     industry: 'Real Estate',
-    example: '"Is the property on Elm Street still available?" — Heyrin provides listing details and schedules a viewing.',
+    example: '"Is the property on Elm Street still available?" — Heyrin can provide approved listing details and help arrange a viewing.',
   },
   {
     icon: CalendarCheck,
     industry: 'Appointment-Based Businesses',
-    example: '"I need to reschedule my appointment." — Heyrin checks availability and confirms a new slot in real time.',
+    example: '"I need to reschedule my appointment." — Heyrin can check connected calendar availability and arrange a new slot.',
   },
   {
     icon: Briefcase,
@@ -37,7 +37,7 @@ export function UseCases() {
   const ActiveIcon = active.icon;
 
   return (
-    <section className="relative py-24 lg:py-32 bg-ink-deep overflow-hidden">
+    <section id="industries" className="heyrin-industries relative py-24 lg:py-32 bg-ink-deep overflow-hidden">
       <div className="absolute inset-0 tech-grid-fine opacity-15" />
 
       <div ref={ref} className={`relative max-w-[1100px] mx-auto px-6 lg:px-10 fade-up ${visible ? 'visible' : ''}`}>
@@ -60,6 +60,8 @@ export function UseCases() {
               return (
                 <button
                   key={uc.industry}
+                  type="button"
+                  aria-pressed={isActive}
                   onClick={() => setSelected(idx)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left ${
                     isActive

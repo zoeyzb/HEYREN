@@ -25,7 +25,7 @@ export function GetStarted() {
   const { ref, visible } = useFadeUp<HTMLDivElement>();
 
   return (
-    <section className="relative py-24 lg:py-32 bg-ink-base overflow-hidden">
+    <section className="heyrin-get-started relative py-24 lg:py-32 bg-ink-base overflow-hidden">
       <div className="absolute inset-0 tech-grid opacity-20" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[400px] bg-lime/3 rounded-full blur-[120px] pointer-events-none" />
 

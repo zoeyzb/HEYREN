@@ -109,7 +109,7 @@ export function Capabilities() {
   const { ref, visible } = useFadeUp<HTMLDivElement>();
 
   return (
-    <section id="capabilities" className="relative py-24 lg:py-32 bg-ink-base overflow-hidden">
+    <section id="capabilities" className="heyrin-capabilities relative py-24 lg:py-32 bg-ink-base overflow-hidden">
       <div className="absolute inset-0 tech-grid opacity-20" />
       <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-violet/4 rounded-full blur-[120px] pointer-events-none" />
 
@@ -125,15 +125,13 @@ export function Capabilities() {
         </div>
 
         {/* Asymmetric grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+        <div className="heyrin-capability-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
           {CAPABILITIES.map((cap, idx) => {
             const Icon = cap.icon;
-            // Make first and last items span differently for asymmetry
-            const colSpan = idx === 0 ? 'lg:col-span-1' : idx === 4 ? 'lg:col-span-1' : '';
             return (
               <div
                 key={cap.title}
-                className={`${colSpan} group relative p-5 rounded-xl border border-ink-line bg-ink-panel/40 hover:bg-ink-panel/70 hover:border-lime/20 transition-all duration-500`}
+                className={`heyrin-capability-card ${idx < 2 ? 'featured' : ''} group relative p-5 rounded-xl border border-ink-line bg-ink-panel/40 hover:bg-ink-panel/70 hover:border-lime/20 transition-all duration-500`}
               >
                 {/* Label */}
                 <div className="flex items-center justify-between mb-4">
@@ -151,24 +149,6 @@ export function Capabilities() {
             );
           })}
 
-          {/* Extra summary cell */}
-          <div className="relative p-5 rounded-xl border border-violet/15 bg-gradient-to-br from-violet/5 to-transparent flex flex-col justify-between">
-            <div>
-              <span className="text-[9px] font-mono tracking-[0.15em] text-violet/60 uppercase">SYSTEM</span>
-              <h3 className="text-base font-medium text-soft mt-3 mb-2 tracking-tight">Connected Intelligence</h3>
-              <p className="text-xs text-silver/70 leading-relaxed">
-                Each capability connects to your business systems through configured integrations.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <div className="flex -space-x-1">
-                {['#B9FF32', '#A16BFF', '#929A96'].map((c, i) => (
-                  <div key={i} className="w-2 h-2 rounded-full border border-ink-base" style={{ background: c, opacity: 0.6 }} />
-                ))}
-              </div>
-              <span className="text-[10px] font-mono text-silver/50">Integrations ready</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>

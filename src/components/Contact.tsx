@@ -40,7 +40,7 @@ export function Contact() {
     const errs: string[] = [];
     if (data.name.trim().length < 2) errs.push('Name is required');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errs.push('Valid business email is required');
-    if (data.message.trim().length < 10) errs.push('Please tell us what your AI agent should handle (at least 10 characters)');
+    if (!data.message.trim()) errs.push('Please tell us what your AI agent should handle');
     return errs;
   };
 
@@ -61,6 +61,11 @@ export function Contact() {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !supabaseAnonKey) {
+        setStatus('error');
+        setErrorMsg('The contact form is being connected. Please use the email address shown alongside the form.');
+        return;
+      }
 
       const response = await fetch(`${supabaseUrl}/functions/v1/contact-inquiry`, {
         method: 'POST',
@@ -96,7 +101,7 @@ export function Contact() {
   }, [status]);
 
   return (
-    <section id="contact" className="relative py-24 lg:py-32 bg-ink-deep overflow-hidden">
+    <section id="contact" className="heyrin-contact relative py-24 lg:py-32 bg-ink-deep overflow-hidden">
       <div className="absolute inset-0 tech-grid-fine opacity-20" />
       <div className="absolute top-1/2 left-1/4 w-[500px] h-[400px] bg-lime/3 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-violet/3 rounded-full blur-[100px] pointer-events-none" />
@@ -220,10 +225,12 @@ export function Contact() {
                   />
 
                   <div>
-                    <label className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
+                    <label htmlFor="heyrin-contact-message" className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
                       What should your AI agent handle? <span className="text-lime">*</span>
                     </label>
                     <textarea
+                      id="heyrin-contact-message"
+                      required
                       value={data.message}
                       onChange={(e) => update('message', e.target.value)}
                       placeholder="Answering calls, booking appointments, qualifying leads..."
@@ -288,15 +295,18 @@ interface FieldProps {
 }
 
 function Field({ label, value, onChange, placeholder, type = 'text', required, optional }: FieldProps) {
+  const id = `heyrin-contact-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   return (
     <div>
-      <label className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
+      <label htmlFor={id} className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
         {label}
         {required && <span className="text-lime"> *</span>}
         {optional && <span className="text-silver/30"> (optional)</span>}
       </label>
       <input
+        id={id}
         type={type}
+        required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

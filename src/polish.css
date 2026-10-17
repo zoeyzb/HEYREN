@@ -1,0 +1,75 @@
+/* Content polish: retain the HEYRIN visual language while eliminating flat grids. */
+.heyrin-capabilities,.heyrin-industries,.heyrin-get-started,.heyrin-contact,.heyrin-faq{scroll-margin-top:69px}
+.heyrin-capabilities{padding-top:90px;padding-bottom:94px}
+.heyrin-capabilities .mb-12.lg\:mb-16{margin-bottom:34px}
+.heyrin-capabilities h2,.heyrin-industries h2,.heyrin-get-started h2,.heyrin-contact h2{letter-spacing:-.055em;line-height:1.12;font-weight:660}
+.heyrin-capability-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:13px}
+.heyrin-capability-grid>.heyrin-capability-card:nth-child(-n+2){grid-column:span 3}
+.heyrin-capability-grid>.heyrin-capability-card:nth-child(n+3){grid-column:span 2}
+.heyrin-capability-card{padding:23px 25px;min-height:215px;border-radius:7px;border-color:#2d372f;background:linear-gradient(140deg,#131915,#0c1010);transition:border-color .25s,background .25s,transform .25s}
+.heyrin-capability-card:hover{border-color:#658743;background:linear-gradient(140deg,#1b261b,#111613);transform:translateY(-3px)}
+.heyrin-capability-card.featured{background:radial-gradient(ellipse at 78% -15%,rgba(185,255,50,.07),transparent 68%),linear-gradient(140deg,#161f18,#0c1110);min-height:237px}
+.heyrin-capability-card:nth-child(2).featured{background:radial-gradient(ellipse at 80% -15%,rgba(161,107,255,.09),transparent 68%),linear-gradient(140deg,#171721,#0c1111)}
+.heyrin-capability-card h3{font-size:17px;letter-spacing:-.025em;font-weight:600;margin-top:4px}
+.heyrin-capability-card p{color:#a1b09d;font-size:12px;line-height:1.7;max-width:440px}
+.heyrin-capability-card .bg-ink-deep\/60{border-color:#344035;background:rgba(7,13,9,.65)}
+.heyrin-capability-card .text-silver\/40{color:#829284}
+.heyrin-capability-card .text-silver\/50{color:#88968c}
+.heyrin-capability-card .text-silver\/70{color:#a2b5a4}
+.heyrin-capability-card .wave-bar{max-height:21px}
+.heyrin-industries{padding-top:89px;padding-bottom:94px}
+.heyrin-industries .mb-12{margin-bottom:32px}
+.heyrin-industries .grid.lg\:grid-cols-\[280px_1fr\]{gap:24px}
+.heyrin-industries button{border-radius:6px;padding:13px 15px;border-color:transparent}
+.heyrin-industries button[aria-pressed="true"]{border-color:#799f44;background:rgba(185,255,50,.08)}
+.heyrin-industries button[aria-pressed="true"] span{color:#b9ff32}
+.heyrin-industries .bg-ink-panel\/40{border-color:#303b30;background:linear-gradient(132deg,rgba(20,28,23,.9),rgba(13,17,16,.93));border-radius:7px;min-height:263px}
+.heyrin-industries .bg-lime\/8{background:rgba(185,255,50,.075)}
+.heyrin-industries .bg-violet\/8{background:rgba(161,107,255,.06)}
+.heyrin-industries .text-silver\/40{color:#879188}
+.heyrin-industries .text-silver\/60{color:#939f95}
+.heyrin-industries .text-silver{color:#afb9b0}
+.heyrin-get-started{padding-top:82px;padding-bottom:84px}
+.heyrin-get-started .mb-12.lg\:mb-16{margin-bottom:43px}
+.heyrin-get-started .grid.md\:grid-cols-3>div{border-top:1px solid #29362c;padding-top:20px}
+.heyrin-get-started .grid.md\:grid-cols-3>div .relative.w-14{margin-top:-49px;background:#0c130c;box-shadow:0 0 17px rgba(185,255,50,.07)}
+.heyrin-get-started .grid.md\:grid-cols-3 h3{font-weight:600;letter-spacing:-.02em}
+.heyrin-get-started .text-silver\/70{color:#a6b4a8}
+.heyrin-get-started .text-silver\/50{color:#8d9c8f}
+.heyrin-get-started .mt-12.text-center{margin-top:38px}
+.heyrin-contact{padding-top:90px;padding-bottom:90px}
+.heyrin-contact .bg-ink-panel\/60{background:linear-gradient(140deg,#171e1b,#0c1210);border:1px solid #394638;border-radius:8px}
+.heyrin-contact input:not([type="hidden"]),.heyrin-contact textarea{background:#0d1411;border-color:#3c4b3e;border-radius:5px;color:#f4f7f2;caret-color:#b9ff32}
+.heyrin-contact input::placeholder,.heyrin-contact textarea::placeholder{color:#84958a;opacity:.65}
+.heyrin-contact input:focus,.heyrin-contact textarea:focus{border-color:#b9ff32;outline:2px solid rgba(185,255,50,.17);outline-offset:1px}
+.heyrin-contact label{font-size:10px;letter-spacing:.075em;color:#b6c3b8}
+.heyrin-contact .text-silver\/40{color:#87988a}
+.heyrin-contact .text-silver\/60{color:#a3aea4}
+.heyrin-contact .text-silver\/70{color:#acb8ad}
+.heyrin-faq{padding-top:78px;padding-bottom:83px}
+.heyrin-faq .mb-10{margin-bottom:24px}
+.heyrin-faq .space-y-2{border-top:1px solid #334332}
+.heyrin-faq .space-y-2>div{margin-top:0!important;border:0;border-bottom:1px solid #344334;border-radius:0;background:transparent;transition:background .25s}
+.heyrin-faq .space-y-2>div:hover{background:rgba(185,255,50,.027)}
+.heyrin-faq .space-y-2>div>button{padding:18px 3px 18px 6px}
+.heyrin-faq .space-y-2>div>button>span{color:#e8f0e6;font-size:14px;font-weight:500;letter-spacing:-.015em}
+.heyrin-faq .space-y-2>div>button[aria-expanded="true"]>span{color:#b9ff32}
+.heyrin-faq .space-y-2>div>button>div{width:25px;height:25px;border:1px solid #425240;border-radius:50%;color:#b9ff32}
+.heyrin-faq .space-y-2>div>button:focus-visible{outline:2px solid #b9ff32;outline-offset:-2px}
+.heyrin-faq .heyrin-faq-answer[hidden]{display:none}
+.heyrin-faq .heyrin-faq-answer p{padding:0 30px 22px 6px;color:#a8b6a8;font-size:13px;line-height:1.8;max-width:730px}
+@media(max-width:1023px){.heyrin-capability-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.heyrin-capability-grid>.heyrin-capability-card:nth-child(n){grid-column:span 1}.heyrin-capability-grid>.heyrin-capability-card:nth-child(5){grid-column:span 2}.heyrin-capability-card{min-height:235px}.heyrin-get-started .grid.md\:grid-cols-3>div .relative.w-14{margin-top:-45px}}
+@media(max-width:767px){
+ .heyrin-capabilities,.heyrin-industries,.heyrin-get-started,.heyrin-contact,.heyrin-faq{padding-top:66px;padding-bottom:68px}
+ .heyrin-capability-grid{grid-template-columns:repeat(1,minmax(0,1fr));gap:10px}
+ .heyrin-capability-grid>.heyrin-capability-card:nth-child(n){grid-column:1}
+ .heyrin-capability-card,.heyrin-capability-card.featured{padding:18px 18px 20px;min-height:0}
+ .heyrin-capability-card h3{font-size:16px}
+ .heyrin-get-started .grid.md\:grid-cols-3>div{padding-top:11px;border:0}
+ .heyrin-get-started .grid.md\:grid-cols-3>div .relative.w-14{margin:0 0 14px}
+ .heyrin-get-started .grid.md\:grid-cols-3{gap:24px}
+ .heyrin-faq .space-y-2>div>button{padding:15px 2px}
+ .heyrin-faq .space-y-2>div>button>span{font-size:13px;max-width:calc(100% - 43px)}
+ .heyrin-faq .heyrin-faq-answer p{font-size:12px;padding:0 19px 17px 5px}
+ .heyrin-contact .bg-ink-panel\/60{padding:20px}
+}

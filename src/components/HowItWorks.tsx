@@ -1,206 +1,89 @@
-import { useRef, useEffect, useState } from 'react';
-import { PhoneIncoming, Brain, MessageSquare, Zap } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { PhoneIncoming, BrainCircuit, MessagesSquare, CalendarCheck2, ArrowUpRight } from 'lucide-react';
 
 const STAGES = [
-  {
-    icon: PhoneIncoming,
-    label: '01',
-    title: 'Incoming Call',
-    desc: 'A customer calls your business number.',
-    detail: 'The call is answered instantly — no hold music, no missed opportunities.',
-    ui: 'call',
-  },
-  {
-    icon: Brain,
-    label: '02',
-    title: 'Voice Intelligence',
-    desc: 'Heyrin processes speech in real time.',
-    detail: 'Natural language understanding identifies intent and extracts key information.',
-    ui: 'process',
-  },
-  {
-    icon: MessageSquare,
-    label: '03',
-    title: 'Customer Conversation',
-    desc: 'A natural dialogue unfolds between caller and agent.',
-    detail: 'Context-aware responses using your business information and conversation flows.',
-    ui: 'conversation',
-  },
-  {
-    icon: Zap,
-    label: '04',
-    title: 'Business Action',
-    desc: 'The conversation triggers a connected workflow.',
-    detail: 'Appointment booked, lead saved, or follow-up scheduled through your integrations.',
-    ui: 'action',
-  },
+  { id: '01', icon: PhoneIncoming, title: 'A call comes in', description: 'Every opportunity starts with a question.', detail: 'A customer reaches your business.', type: 'incoming' },
+  { id: '02', icon: BrainCircuit, title: 'Intent becomes clear', description: 'The agent recognizes what matters.', detail: 'Need: plumbing repair', type: 'intent' },
+  { id: '03', icon: MessagesSquare, title: 'A helpful conversation', description: 'Natural questions reveal the next step.', detail: '“What time works best?”', type: 'response' },
+  { id: '04', icon: CalendarCheck2, title: 'A business action', description: 'A configured workflow takes it from there.', detail: 'Appointment request', type: 'action' },
 ];
 
-function StageUI({ type }: { type: string }) {
-  if (type === 'call') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 w-full max-w-[200px]">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-2 h-2 rounded-full bg-lime animate-pulse" />
-          <span className="text-[10px] font-mono text-silver">Ring...</span>
-        </div>
-        <div className="text-[10px] font-mono text-silver/50">+1 (555) 0142</div>
-      </div>
-    );
-  }
-  if (type === 'process') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 w-full max-w-[200px] space-y-1.5">
-        {['Intent: book_appointment', 'Confidence: 94%', 'Action: check_calendar'].map((line, i) => (
-          <div key={i} className="text-[10px] font-mono text-silver/70 flex items-center gap-1.5">
-            <span className="text-lime">{'>'}</span> {line}
-          </div>
-        ))}
-      </div>
-    );
-  }
-  if (type === 'conversation') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 w-full max-w-[200px] space-y-2">
-        <div className="text-[10px] text-silver/70 bg-ink-graphite/60 rounded px-2 py-1.5">"I need to book a repair."</div>
-        <div className="text-[10px] text-soft bg-lime/8 border border-lime/15 rounded px-2 py-1.5">"What day works for you?"</div>
-      </div>
-    );
-  }
-  return (
-    <div className="bg-ink-deep/60 rounded-lg border border-lime/20 p-3 w-full max-w-[200px]">
-      <div className="flex items-center gap-2">
-        <div className="w-5 h-5 rounded-full bg-lime/15 flex items-center justify-center">
-          <Zap size={10} className="text-lime" />
-        </div>
-        <span className="text-[10px] font-mono text-lime">Appointment booked</span>
-      </div>
-    </div>
-  );
+function StepIllustration({ type, active }: { type: string; active: boolean }) {
+  return <div className={`heyrin-step-signal heyrin-step-signal--${type} ${active ? 'lit' : ''}`} aria-hidden="true">
+    {type === 'incoming' && <><div className="heyrin-step-ring"><PhoneIncoming size={19} /></div><span className="heyrin-step-signal-text">INCOMING / VOICE</span><div className="heyrin-mini-vu">{Array.from({length:13},(_,i)=><i key={i} style={{'--i':i} as React.CSSProperties}/>)}</div></>}
+    {type === 'intent' && <><div className="heyrin-intent-orbit"><BrainCircuit size={27}/><span/><span/></div><div className="heyrin-intent-tags"><small>identify</small><strong>APPOINTMENT</strong></div></>}
+    {type === 'response' && <><div className="heyrin-dialogue-tiny"><i/>I need a repair.</div><div className="heyrin-dialogue-tiny reply"><i/>What day works?</div></>}
+    {type === 'action' && <><div className="heyrin-step-calendar"><CalendarCheck2 size={23}/><span>READY TO BOOK</span></div><span className="heyrin-step-success">● NEXT STEP IDENTIFIED</span></>}
+  </div>;
 }
 
 export function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [activeStage, setActiveStage] = useState(0);
-  const lineRef = useRef<HTMLDivElement>(null);
-  const [lineProgress, setLineProgress] = useState(0);
 
   useEffect(() => {
-    const handler = () => {
-      if (!sectionRef.current) return;
-      const rect = sectionRef.current.getBoundingClientRect();
-      const start = rect.top - window.innerHeight * 0.6;
-      const end = rect.bottom - window.innerHeight * 0.4;
-      const total = end - start;
-      const progress = Math.max(0, Math.min(1, (window.scrollY - (rect.top + window.scrollY - window.innerHeight * 0.6)) / total));
-
-      const scrolled = window.scrollY - (rect.top + window.scrollY - start);
-      const p = Math.max(0, Math.min(1, scrolled / total));
-      setLineProgress(p);
-
-      const stage = Math.min(3, Math.floor(p * 4));
-      setActiveStage(stage);
+    const section = sectionRef.current;
+    if (!section) return;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let lastProgress = -1;
+    const measure = () => {
+      const rect = section.getBoundingClientRect();
+      const start = window.innerHeight * .8;
+      const end = window.innerHeight * .18 - rect.height * .28;
+      const progress = prefersReduced ? 1 : Math.max(0, Math.min(1, (start - rect.top) / (start - end)));
+      const percent = Math.round(progress * 100);
+      if (percent === lastProgress) return;
+      lastProgress = percent;
+      // Update the few scroll-linked DOM nodes directly. Heavy Spline/WebGL
+      // work elsewhere on the page can postpone React rerenders; the timeline
+      // must not wait for them to advance.
+      section.dataset.progress = String(percent);
+      const track = section.querySelector<HTMLElement>('.heyrin-journey-steps');
+      track?.style.setProperty('--progress', `${percent}%`);
+      section.querySelectorAll<HTMLElement>('.heyrin-journey-step').forEach((node, i) => {
+        node.classList.toggle('lit', progress >= (i / 4));
+      });
     };
-    window.addEventListener('scroll', handler, { passive: true });
-    handler();
-    return () => window.removeEventListener('scroll', handler);
+    window.addEventListener('scroll', measure, { passive: true });
+    window.addEventListener('resize', measure, { passive: true });
+    const intersectionObserver = new IntersectionObserver(measure, { threshold: [0, .1, .25, .5, .75, 1] });
+    intersectionObserver.observe(section);
+    measure();
+    return () => {
+      intersectionObserver.disconnect();
+      window.removeEventListener('scroll', measure);
+      window.removeEventListener('resize', measure);
+    };
   }, []);
 
   return (
-    <section id="how-it-works" ref={sectionRef} className="relative py-24 lg:py-32 bg-ink-deep overflow-hidden">
-      <div className="absolute inset-0 tech-grid-fine opacity-20" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-lime/3 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="relative max-w-[1200px] mx-auto px-6 lg:px-10">
-        <div className="mb-12 lg:mb-20">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-6 h-px bg-lime/60" />
-            <span className="text-xs font-mono tracking-[0.2em] text-lime/80 uppercase">How It Works</span>
-          </div>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-soft tracking-tight">
-            One call. Endless possibilities.
-          </h2>
+    <section ref={sectionRef} id="how-it-works" className="heyrin-journey relative bg-ink-deep overflow-hidden" aria-labelledby="journey-heading" data-progress={0}>
+      <div className="absolute inset-0 tech-grid-fine opacity-15 pointer-events-none" />
+      <div className="heyrin-journey-glow" aria-hidden="true" />
+      <div className="heyrin-journey-content relative max-w-[1200px] mx-auto px-6 lg:px-10">
+        <div className="heyrin-section-kicker"><span className="heyrin-kicker-rule"/>THE PROCESS <span className="heyrin-index">02 / HOW HEYRIN WORKS</span></div>
+        <div className="heyrin-journey-title">
+          <h2 id="journey-heading" className="font-display text-soft">One call.<br/><span>Endless possibilities.</span></h2>
+          <p>Watch an ordinary customer call move from a question to a business opportunity.</p>
         </div>
-
-        {/* Desktop: horizontal circuit */}
-        <div className="hidden lg:block relative">
-          {/* Circuit line */}
-          <div className="absolute left-0 right-0 top-[80px] h-px bg-ink-line">
-            <div
-              ref={lineRef}
-              className="h-full bg-gradient-to-r from-lime via-lime to-violet transition-all duration-300"
-              style={{ width: `${lineProgress * 100}%`, boxShadow: '0 0 12px rgba(185,255,50,0.5)' }}
-            />
-          </div>
-
-          {/* Signal dot */}
-          <div
-            className="absolute top-[77px] w-2 h-2 rounded-full bg-lime transition-all duration-300"
-            style={{
-              left: `calc(${lineProgress * 100}% - 4px)`,
-              boxShadow: '0 0 16px rgba(185,255,50,0.8)',
-            }}
-          />
-
-          {/* Stages */}
-          <div className="grid grid-cols-4 gap-6">
-            {STAGES.map((stage, idx) => {
-              const Icon = stage.icon;
-              const isActive = idx <= activeStage;
-              return (
-                <div key={idx} className="relative pt-[60px]">
-                  {/* Node */}
-                  <div className={`absolute left-0 top-[60px] w-5 h-5 rounded-full border-2 transition-all duration-500 ${
-                    isActive ? 'border-lime bg-lime/20' : 'border-ink-line bg-ink-base'
-                  }`}>
-                    {isActive && <div className="absolute inset-0 rounded-full bg-lime/30 animate-ping" />}
-                  </div>
-
-                  <div className={`transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-40'}`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Icon size={16} className={isActive ? 'text-lime' : 'text-silver/50'} />
-                      <span className="text-[10px] font-mono tracking-wider text-silver/50 uppercase">{stage.label}</span>
-                    </div>
-                    <h3 className="text-lg font-medium text-soft mb-2 tracking-tight">{stage.title}</h3>
-                    <p className="text-xs text-silver/70 mb-3 leading-relaxed">{stage.desc}</p>
-                    <p className="text-xs text-silver/50 mb-4 leading-relaxed">{stage.detail}</p>
-                    <StageUI type={stage.ui} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Mobile: vertical flow */}
-        <div className="lg:hidden space-y-8 relative">
-          <div className="absolute left-[10px] top-2 bottom-2 w-px bg-ink-line" />
-          <div
-            className="absolute left-[10px] top-2 w-px bg-gradient-to-b from-lime to-violet transition-all duration-300"
-            style={{ height: `${lineProgress * 100}%` }}
-          />
-          {STAGES.map((stage, idx) => {
+        <div className="heyrin-journey-steps" style={{'--progress': '0%'} as React.CSSProperties}>
+          <div className="heyrin-journey-track" aria-hidden="true"><div className="heyrin-journey-track-fill"/><span className="heyrin-journey-spark"/></div>
+          {STAGES.map((stage, i) => {
             const Icon = stage.icon;
-            const isActive = idx <= activeStage;
-            return (
-              <div key={idx} className="relative pl-8">
-                <div className={`absolute left-0 top-1 w-5 h-5 rounded-full border-2 transition-all ${
-                  isActive ? 'border-lime bg-lime/20' : 'border-ink-line bg-ink-base'
-                }`} />
-                <div className={isActive ? 'opacity-100' : 'opacity-50'}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon size={14} className={isActive ? 'text-lime' : 'text-silver/50'} />
-                    <span className="text-[10px] font-mono tracking-wider text-silver/50 uppercase">{stage.label}</span>
-                  </div>
-                  <h3 className="text-base font-medium text-soft mb-1.5">{stage.title}</h3>
-                  <p className="text-xs text-silver/70 mb-2">{stage.desc}</p>
-                  <p className="text-xs text-silver/50 mb-3">{stage.detail}</p>
-                  <StageUI type={stage.ui} />
+            const active = i === 0;
+            return <article key={stage.id} className={`heyrin-journey-step ${active ? 'lit' : ''}`} data-stage={i+1}>
+              <div className="heyrin-journey-node"><Icon size={17} /><span>{stage.id}</span></div>
+              <div className="heyrin-journey-card">
+                <StepIllustration type={stage.type} active={active}/>
+                <div className="heyrin-journey-card-bottom">
+                  <div><span className="heyrin-journey-step-id">STAGE {stage.id} / 04</span><h3>{stage.title}</h3></div>
+                  <ArrowUpRight size={15} aria-hidden="true"/>
                 </div>
+                <p>{stage.description}</p>
               </div>
-            );
+            </article>;
           })}
         </div>
+        <div className="heyrin-journey-footer"><span>FROM FIRST RING TO NEXT STEP</span><span>SCROLL TO FOLLOW THE SIGNAL <span aria-hidden="true">↘</span></span></div>
       </div>
     </section>
   );
