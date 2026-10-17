@@ -217,3 +217,13 @@ body {
 .hero-spline-atmosphere { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .hero-spline-atmosphere canvas { width: 100% !important; height: 100% !important; }
 @media (max-width: 767px) { .hero-spline-stack { display: none; } .hero-static-preview:not(.is-hidden) { opacity: .94; } .hero-static-preview-image { height: 94%; max-width: 120%; transform: translateY(8%); } }
+
+/* Remove the screenshot-like intro on desktop without disturbing the live Spline canvas. */
+@media (min-width: 768px) {
+  .hero-static-preview-image { display: none; }
+  .hero-static-preview { background: radial-gradient(ellipse 34% 42% at 51% 46%, rgba(173,255,82,.065), rgba(112,76,216,.035) 60%, transparent 100%); }
+}
+/* On mobile the 3D scene remains intentionally paused: dissolve the fallback into the page. */
+@media (max-width: 767px) {
+  .hero-static-preview-image { -webkit-mask-image: radial-gradient(ellipse 48% 48% at 50% 49%, #000 40%, rgba(0,0,0,.72) 60%, transparent 100%); mask-image: radial-gradient(ellipse 48% 48% at 50% 49%, #000 40%, rgba(0,0,0,.72) 60%, transparent 100%); }
+}
