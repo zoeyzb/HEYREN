@@ -16,3 +16,11 @@
 - [x] Replace the asset’s unsafe split-part arm transitions with a synchronized, low-amplitude idle pose that preserves Spline playback, face, lighting, pointer interaction, and orbital effects.
 - [x] Verify fresh loading, repeated refreshes, pointer interaction, desktop and mobile layouts, visible live canvases after idle time, route health, typecheck, and production build.
 - [x] No Vercel deployment performed.
+
+# Hero pose and expression refinement
+
+## Premium state-based presentation motion
+- [x] Keep the existing Spline humanoid, page layout, typography, CTA buttons, palette, loading pipeline, and all non-hero sections unchanged.
+- [x] Replace the awkward hands-up arm presentation with a calmer, mechanically believable pose: shoulders seated to the torso, elbows bent inward, forearms aligned, and hands kept attached.
+- [x] Add restrained idle/listening/speaking behavior through subtle head tilt, head turn, torso rhythm, and timed arm movement.
+- [x] Verify three fresh browser loads, live Spline canvas visibility after handoff, pointer interaction, desktop capture, mobile fallback capture, route health, typecheck, and production build.
