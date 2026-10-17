@@ -6,6 +6,43 @@ import { FloatingIndicators, ProcessingRings, SignalParticles, VoiceWaveform3D }
 const Spline = lazy(() => import('@splinetool/react-spline'));
 const SPLINE_SCENE = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
 const SPLINE_ZOOM = 0.78;
+const ARM_NODE_IDS = [
+  'de26dd82-4dde-4254-875a-8dc236d86f55', 'ab1c1c5b-0163-44ea-a42b-1ee55073fa7b',
+  'da4440d7-8876-4c40-b05b-9d770edeedfe', 'af6a5aaa-99ec-4ba3-b85c-1522b05385b5',
+  'fa25da6e-3c3f-4272-8d90-b6213f6c6911', '101bc66e-ed93-4578-a9a5-56a2fa16bea7',
+  'edfc2df1-9758-478a-9771-a59736f77086', 'c6a80d5f-accd-4fb6-a00b-6559f3c77a16',
+  '1c244a05-58cc-4c2b-b127-62d7d290d995', '377263ac-e2d2-4042-b8f3-b532357d5aeb',
+] as const;
+const ARM_BASE_POSITION = {
+  elbow: { x: 20.542, y: -85.632, z: 2.657 },
+  forearm: { x: -4.79, y: -12.261, z: 1.36 },
+  hand: { x: -9.435, y: -91.204, z: 36.55 },
+};
+function repairArmPose(app: Application, time: number) {
+  const sway = Math.sin(time * 0.72) * 0.035;
+  for (const id of ARM_NODE_IDS) {
+    const object = app.findObjectById(id);
+    if (!object) continue;
+    if (object.name === 'elbow') {
+      object.position = ARM_BASE_POSITION.elbow;
+      object.rotation = { x: 0, y: -0.08 + sway * 0.4, z: 0 };
+    } else if (object.name === 'forearm') {
+      object.position = ARM_BASE_POSITION.forearm;
+      object.rotation = { x: 0.18 - sway * 0.5, y: 0, z: 0 };
+    } else if (object.name === 'Hand') {
+      object.position = ARM_BASE_POSITION.hand;
+      object.rotation = {
+        x: 0.18 + sway * 0.25,
+        y: 0.86 + sway * 0.35,
+        z: -0.56,
+      };
+    } else if (object.name === 'arm') {
+      object.rotation = { x: -0.18 + sway, y: 0, z: 0 };
+    } else if (object.name === 'Hand LEFT') {
+      object.rotation = { x: 0, y: 0, z: 0.09 + sway * 0.2 };
+    }
+  }
+}
 
 interface HeroSceneProps {
   listening?: boolean;
@@ -37,9 +74,11 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
   const [atmosphereReady, setAtmosphereReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const atmosphereTimer = useRef<number | null>(null);
+  const armRepairFrame = useRef<number | null>(null);
 
   useEffect(() => () => {
     if (atmosphereTimer.current !== null) window.clearTimeout(atmosphereTimer.current);
+    if (armRepairFrame.current !== null) window.cancelAnimationFrame(armRepairFrame.current);
   }, []);
 
   useEffect(() => {
@@ -59,6 +98,11 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
     // unframed initial camera state. The scene's own animation loop remains untouched.
     app.setZoom(SPLINE_ZOOM);
     app.setGlobalEvents(true);
+    const keepArmsConnected = () => {
+      repairArmPose(app, performance.now() / 1000);
+      armRepairFrame.current = window.requestAnimationFrame(keepArmsConnected);
+    };
+    keepArmsConnected();
     requestAnimationFrame(() => {
       app.setZoom(SPLINE_ZOOM);
       requestAnimationFrame(() => {

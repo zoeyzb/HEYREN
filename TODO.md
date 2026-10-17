@@ -8,3 +8,11 @@
 - [x] Optimize Three.js for fast loading and smooth rendering, with responsive desktop and mobile layouts.
 - [x] Run and visually test the website at desktop and mobile sizes, fixing issues found.
 - [x] No deployment or Phase 2 work performed.
+
+# Targeted Spline arm repair
+
+## Connected arm rig and stable animation
+- [x] Repair the actual Spline robot’s shoulder, upper-arm, elbow, forearm, wrist, and hand continuity without replacing the humanoid or using CSS arms.
+- [x] Replace the asset’s unsafe split-part arm transitions with a synchronized, low-amplitude idle pose that preserves Spline playback, face, lighting, pointer interaction, and orbital effects.
+- [x] Verify fresh loading, repeated refreshes, pointer interaction, desktop and mobile layouts, visible live canvases after idle time, route health, typecheck, and production build.
+- [x] No Vercel deployment performed.
