@@ -24,3 +24,23 @@
 - [x] Replace the awkward hands-up arm presentation with a calmer, mechanically believable pose: shoulders seated to the torso, elbows bent inward, forearms aligned, and hands kept attached.
 - [x] Add restrained idle/listening/speaking behavior through subtle head tilt, head turn, torso rhythm, and timed arm movement.
 - [x] Verify three fresh browser loads, live Spline canvas visibility after handoff, pointer interaction, desktop capture, mobile fallback capture, route health, typecheck, and production build.
+
+# Awwwards Phase 1 — non-hero experiences
+
+## Voice Experience
+- [x] Create a cinematic interactive call interface with appointment booking selected by default, animated caller/AI messages, synchronized waveforms, realistic conversation flow, replay/pause controls, and an elegant outcome panel.
+- [x] Clearly label the conversation as illustrative and never present scripted events as real bookings.
+
+## Capabilities
+- [x] Replace repetitive SaaS cards with three visually distinct, premium interactive experiences for answering calls, qualifying leads, and scheduling appointments.
+- [x] Use useful workflow visuals and sophisticated, performant animations in desktop and mobile layouts.
+
+## Voice Intelligence
+- [x] Replace the generic visualization with an extraordinary interactive signal system with three distinctly animated states: Listening, Understanding, and Responding.
+- [x] Add subtle 3D depth, luminous particles, responsive motion, and strong performance while preserving reduced-motion and offscreen pausing behavior.
+
+## Scope and delivery
+- [x] Do not modify the hero robot, Spline scene, hero layout, existing functionality, or other website sections.
+- [x] Run typecheck/build, visually inspect all changed sections on desktop and mobile, push a new GitHub branch, provide a working preview and screenshots, and do not deploy to Vercel.
+
+Validation note: `npm run typecheck` and `npm run build` pass. `npm run lint` remains blocked by the unrelated pre-existing `emailError` unused-variable error in `supabase/functions/contact-inquiry/index.ts`; no unrelated file was changed.

@@ -1,154 +1,84 @@
+import { useMemo, useState } from 'react';
+import { ArrowUpRight, CalendarClock, Check, CircleCheck, Clock3, Link2, PhoneIncoming, Sparkles, UserCheck, Workflow } from 'lucide-react';
 import { useFadeUp } from '@/hooks/useReveal';
-import { PhoneIncoming, UserCheck, CalendarClock, MessageSquareQuote, Send, Activity } from 'lucide-react';
 
-const CAPABILITIES = [
-  {
-    icon: PhoneIncoming,
-    title: 'Answer Incoming Calls',
-    desc: 'Make customer calls easier to handle with an AI voice agent configured for business inquiries.',
-    label: 'INCOMING',
-    widget: 'call',
-  },
-  {
-    icon: UserCheck,
-    title: 'Qualify New Leads',
-    desc: 'Collect relevant customer information and identify what each caller needs.',
-    label: 'LEAD QUAL',
-    widget: 'lead',
-  },
-  {
-    icon: CalendarClock,
-    title: 'Schedule Appointments',
-    desc: 'Help callers find and request appointments through connected scheduling systems.',
-    label: 'SCHEDULE',
-    widget: 'appointment',
-  },
-  {
-    icon: MessageSquareQuote,
-    title: 'Handle Common Questions',
-    desc: 'Provide responses using business-approved information.',
-    label: 'FAQ',
-    widget: 'message',
-  },
-  {
-    icon: Send,
-    title: 'Follow Up Intelligently',
-    desc: 'Support appropriate follow-up workflows and handoffs through configured integrations.',
-    label: 'FOLLOW-UP',
-    widget: 'followup',
-  },
+type CapabilityId = 'answering' | 'qualifying' | 'scheduling';
+
+const CAPABILITIES: Array<{
+  id: CapabilityId;
+  number: string;
+  label: string;
+  title: string;
+  description: string;
+  icon: typeof PhoneIncoming;
+  accent: 'lime' | 'violet';
+}> = [
+  { id: 'answering', number: '01', label: 'INCOMING / VOICE', title: 'Answer every call with context.', description: 'Heyrin greets the caller, understands the reason for calling, and routes the moment without making the customer repeat themselves.', icon: PhoneIncoming, accent: 'lime' },
+  { id: 'qualifying', number: '02', label: 'INTENT / LEAD QUAL', title: 'Turn conversations into signal.', description: 'Capture the details that matter—service need, urgency, location, and callback context—before the opportunity goes cold.', icon: UserCheck, accent: 'violet' },
+  { id: 'scheduling', number: '03', label: 'NEXT STEP / SCHEDULE', title: 'Make the next step obvious.', description: 'Surface the right availability and prepare a handoff or appointment flow that fits how your team already works.', icon: CalendarClock, accent: 'lime' },
 ];
 
-function MiniWidget({ type }: { type: string }) {
-  if (type === 'call') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-lime animate-pulse" />
-            <span className="text-[10px] font-mono text-silver">Incoming call</span>
-          </div>
-          <span className="text-[10px] font-mono text-silver/50">+1 (555) 0142</span>
-        </div>
-        <div className="flex items-center justify-center gap-0.5 h-6">
-          {Array.from({ length: 18 }).map((_, i) => (
-            <span key={i} className="wave-bar" style={{ animationDelay: `${i * 0.08}s`, color: '#B9FF32', opacity: 0.6 }} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-  if (type === 'lead') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 space-y-1.5">
-        {['Name captured', 'Service need identified', 'Callback number saved'].map((step, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className={`w-1.5 h-1.5 rounded-full ${i < 2 ? 'bg-lime' : 'bg-silver/30'}`} />
-            <span className={`text-[10px] font-mono ${i < 2 ? 'text-silver' : 'text-silver/40'}`}>{step}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  if (type === 'appointment') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3">
-        <div className="text-[10px] font-mono text-silver/50 mb-2">WED — OCT 22</div>
-        <div className="grid grid-cols-3 gap-1">
-          {['9:00', '11:00', '2:00'].map((time, i) => (
-            <div key={i} className={`text-center text-[10px] font-mono py-1 rounded ${i === 2 ? 'bg-lime/15 text-lime border border-lime/30' : 'text-silver/40 border border-ink-line'}`}>
-              {time}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  if (type === 'message') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 space-y-1.5">
-        <div className="text-[10px] font-mono text-violet/60">Caller asks:</div>
-        <div className="text-[10px] text-silver/70">"What are your business hours?"</div>
-        <div className="text-[10px] font-mono text-lime/60 pt-1">Heyrin responds:</div>
-        <div className="text-[10px] text-silver/70">"We're open Mon–Fri, 8 AM to 6 PM."</div>
-      </div>
-    );
-  }
-  return (
-    <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <Activity size={10} className="text-lime" />
-        <span className="text-[10px] font-mono text-silver">Follow-up sent</span>
-      </div>
-      <div className="text-[10px] text-silver/60">SMS confirmation delivered to caller</div>
+function AnsweringVisual() {
+  return <div className="capability-visual capability-visual-answering">
+    <div className="capability-visual-top"><span><i className="capability-live-dot" /> LIVE ROUTING SIGNAL</span><span>00:12</span></div>
+    <div className="capability-call-orb"><PhoneIncoming size={20} /><span>INCOMING CALL</span><strong>+1 (555) 0142</strong><div className="capability-waveform">{Array.from({ length: 28 }, (_, i) => <i key={i} style={{ '--i': i } as React.CSSProperties} />)}</div></div>
+    <div className="capability-route" aria-label="Call workflow">
+      <div className="capability-route-line" /><div className="capability-route-node is-active"><span>01</span><strong>Answer</strong><small>Greeting + intent</small></div><div className="capability-route-node"><span>02</span><strong>Understand</strong><small>Reason for call</small></div><div className="capability-route-node"><span>03</span><strong>Route</strong><small>Right next step</small></div>
     </div>
-  );
+  </div>;
+}
+
+function QualifyingVisual() {
+  const fields = [
+    { label: 'SERVICE NEED', value: 'Emergency repair', state: 'captured' },
+    { label: 'URGENCY', value: 'Today', state: 'captured' },
+    { label: 'CALLBACK', value: '+1 (555) 0142', state: 'captured' },
+    { label: 'LOCATION', value: 'Oak Street', state: 'pending' },
+  ];
+  return <div className="capability-visual capability-visual-qualifying">
+    <div className="capability-visual-top"><span><i className="capability-live-dot violet" /> CONTEXT MAP</span><span>4 SIGNALS</span></div>
+    <div className="lead-score"><div className="lead-score-ring"><strong>82</strong><span>signal</span></div><div><span className="lead-score-label">CONVERSATION QUALITY</span><strong>Ready for follow-up</strong><small>Enough context to move forward.</small></div></div>
+    <div className="lead-fields">{fields.map((field) => <div className={`lead-field ${field.state}`} key={field.label}><span>{field.label}</span><strong>{field.value}</strong><Check size={13} /></div>)}</div>
+    <div className="lead-footer"><Sparkles size={13} /> Prioritized from the conversation</div>
+  </div>;
+}
+
+function SchedulingVisual() {
+  return <div className="capability-visual capability-visual-scheduling">
+    <div className="capability-visual-top"><span><i className="capability-live-dot" /> AVAILABILITY WINDOW</span><span>WED — OCT 22</span></div>
+    <div className="schedule-layout"><div className="schedule-calendar"><div className="schedule-calendar-day"><span>WED</span><strong>22</strong></div><div className="schedule-calendar-month">OCTOBER<br/><small>2026</small></div></div><div className="schedule-slots"><div className="schedule-slot muted"><Clock3 size={13} /> 09:00 <span>occupied</span></div><div className="schedule-slot selected"><Clock3 size={13} /> 14:00 <span>best fit</span><Check size={13} /></div><div className="schedule-slot"><Clock3 size={13} /> 16:30 <span>available</span></div></div></div>
+    <div className="schedule-handoff"><div className="handoff-node"><Workflow size={14} /><span>Conversation</span></div><div className="handoff-connector" /><div className="handoff-node is-active"><CalendarClock size={14} /><span>Next step ready</span></div><ArrowUpRight size={15} /></div>
+  </div>;
+}
+
+function WorkflowVisual({ id }: { id: CapabilityId }) {
+  if (id === 'answering') return <AnsweringVisual />;
+  if (id === 'qualifying') return <QualifyingVisual />;
+  return <SchedulingVisual />;
 }
 
 export function Capabilities() {
   const { ref, visible } = useFadeUp<HTMLDivElement>();
-
+  const [activeId, setActiveId] = useState<CapabilityId>('answering');
+  const active = useMemo(() => CAPABILITIES.find((item) => item.id === activeId) ?? CAPABILITIES[0], [activeId]);
+  const Icon = active.icon;
   return (
-    <section id="capabilities" className="heyrin-capabilities relative py-24 lg:py-32 bg-ink-base overflow-hidden">
+    <section id="capabilities" className="heyrin-capabilities relative overflow-hidden bg-ink-base" aria-labelledby="capabilities-heading">
       <div className="absolute inset-0 tech-grid opacity-20" />
-      <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-violet/4 rounded-full blur-[120px] pointer-events-none" />
-
+      <div className="capability-ambient capability-ambient-lime" aria-hidden="true" /><div className="capability-ambient capability-ambient-violet" aria-hidden="true" />
       <div ref={ref} className={`relative max-w-[1200px] mx-auto px-6 lg:px-10 fade-up ${visible ? 'visible' : ''}`}>
-        <div className="mb-12 lg:mb-16">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-6 h-px bg-lime/60" />
-            <span className="text-xs font-mono tracking-[0.2em] text-lime/80 uppercase">Capabilities</span>
+        <div className="capabilities-heading-row"><div><div className="flex items-center gap-3 mb-4"><div className="w-6 h-px bg-lime/60" /><span className="text-xs font-mono tracking-[0.2em] text-lime/80 uppercase">Capabilities</span></div><h2 id="capabilities-heading" className="font-display text-3xl sm:text-4xl lg:text-5xl text-soft tracking-tight">More than answering calls.</h2><p className="capabilities-intro">One voice system, three ways to turn a conversation into momentum.</p></div><div className="capabilities-heading-meta"><span className="capability-live-dot" /> SYSTEMS / 03 <span className="capabilities-heading-meta-line" /></div></div>
+        <div className="capability-experience-shell">
+          <div className="capability-selector" role="tablist" aria-label="Explore Heyrin capabilities">
+            <div className="capability-selector-label">EXPLORE THE SYSTEM</div>
+            {CAPABILITIES.map((item) => { const ItemIcon = item.icon; const selected = item.id === activeId; return <button type="button" role="tab" aria-selected={selected} key={item.id} onClick={() => setActiveId(item.id)} className={`capability-selector-item ${selected ? 'is-active' : ''} accent-${item.accent}`}><span className="capability-selector-number">{item.number}</span><span className="capability-selector-copy"><small>{item.label}</small><strong>{item.title}</strong></span><ItemIcon size={17} /></button>; })}
+            <div className="capability-selector-footer"><Link2 size={13} /><span>Works with your existing workflows.</span></div>
           </div>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-soft tracking-tight">
-            More than answering calls.
-          </h2>
-        </div>
-
-        {/* Asymmetric grid */}
-        <div className="heyrin-capability-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-          {CAPABILITIES.map((cap, idx) => {
-            const Icon = cap.icon;
-            return (
-              <div
-                key={cap.title}
-                className={`heyrin-capability-card ${idx < 2 ? 'featured' : ''} group relative p-5 rounded-xl border border-ink-line bg-ink-panel/40 hover:bg-ink-panel/70 hover:border-lime/20 transition-all duration-500`}
-              >
-                {/* Label */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[9px] font-mono tracking-[0.15em] text-silver/40 uppercase">{cap.label}</span>
-                  <div className="w-7 h-7 rounded-lg bg-ink-deep border border-ink-line flex items-center justify-center group-hover:border-lime/30 transition-colors">
-                    <Icon size={14} className="text-silver group-hover:text-lime transition-colors" />
-                  </div>
-                </div>
-
-                <h3 className="text-base font-medium text-soft mb-2 tracking-tight">{cap.title}</h3>
-                <p className="text-xs text-silver/70 leading-relaxed mb-4">{cap.desc}</p>
-
-                <MiniWidget type={cap.widget} />
-              </div>
-            );
-          })}
-
+          <div className={`capability-stage accent-${active.accent}`} key={active.id}>
+            <div className="capability-stage-top"><div className="capability-stage-title"><div className="capability-stage-icon"><Icon size={17} /></div><div><span>{active.label}</span><h3>{active.title}</h3></div></div><div className="capability-stage-index">{active.number} <span>/ 03</span></div></div>
+            <WorkflowVisual id={active.id} />
+            <div className="capability-stage-bottom"><p>{active.description}</p><span className="capability-stage-note"><CircleCheck size={14} /> Designed for the handoff</span></div>
+          </div>
         </div>
       </div>
     </section>
