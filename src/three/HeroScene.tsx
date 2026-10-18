@@ -11,38 +11,31 @@ const EXPRESSION_NODE_IDS = {
   neck: '03cba3e5-4e08-49e1-bd9c-c37a9cded0d5',
   body: '342265b2-6982-4c49-b670-fee0149640a3',
 } as const;
-const ARM_NODE_IDS = [
-  'de26dd82-4dde-4254-875a-8dc236d86f55', 'ab1c1c5b-0163-44ea-a42b-1ee55073fa7b',
-  'da4440d7-8876-4c40-b05b-9d770edeedfe', 'af6a5aaa-99ec-4ba3-b85c-1522b05385b5',
-  'fa25da6e-3c3f-4272-8d90-b6213f6c6911', '101bc66e-ed93-4578-a9a5-56a2fa16bea7',
-  'edfc2df1-9758-478a-9771-a59736f77086', 'c6a80d5f-accd-4fb6-a00b-6559f3c77a16',
-  '1c244a05-58cc-4c2b-b127-62d7d290d995', '377263ac-e2d2-4042-b8f3-b532357d5aeb',
-] as const;
-const ARM_BASE_POSITION = {
-  elbow: { x: 20.542, y: -85.632, z: 2.657 },
-  forearm: { x: -4.79, y: -12.261, z: 1.36 },
-  hand: { x: -9.435, y: -91.204, z: 36.55 },
-};
 type MotionState = 'idle' | 'listening' | 'speaking';
 type Euler = { x: number; y: number; z: number };
+type Point = { x: number; y: number; z: number };
+type Transform = { position: Point; rotation: Euler };
+type SplineObjectLike = { uuid: string; name: string; position: Point; rotation: Euler };
 
-function repairArmPose(app: Application, time: number, state: MotionState, baseRotations: Map<string, Euler>) {
+function getArmObjects(app: Application): SplineObjectLike[] {
+  const runtime = app as unknown as { getAllObjects?: () => SplineObjectLike[] };
+  return (runtime.getAllObjects?.() ?? []).filter((object) => /^(arm|elbow|forearm|Hand|Hand LEFT|Hand Instance)$/i.test(object.name));
+}
+
+function repairArmPose(app: Application, time: number, state: MotionState, baseRotations: Map<string, Euler>, baseTransforms: Map<string, Transform>) {
   const speakingPulse = state === 'speaking' ? Math.sin(time * 2.15) * 0.045 : 0;
   const listeningLift = state === 'listening' ? 0.035 : 0;
   const sway = Math.sin(time * 0.72) * 0.018;
   const armLift = -0.06 - listeningLift + speakingPulse * 0.22;
   const elbowBend = -0.10 - listeningLift * 0.45 + speakingPulse * 0.12;
-  for (const id of ARM_NODE_IDS) {
-    const object = app.findObjectById(id);
-    if (!object) continue;
+  for (const object of getArmObjects(app)) {
+    const baseTransform = baseTransforms.get(object.uuid);
+    if (baseTransform && object.name !== 'arm') object.position = baseTransform.position;
     if (object.name === 'elbow') {
-      object.position = ARM_BASE_POSITION.elbow;
       object.rotation = { x: 0, y: elbowBend + sway * 0.35, z: 0 };
     } else if (object.name === 'forearm') {
-      object.position = ARM_BASE_POSITION.forearm;
       object.rotation = { x: 0.27 - speakingPulse * 0.18, y: 0, z: 0 };
     } else if (object.name === 'Hand') {
-      object.position = ARM_BASE_POSITION.hand;
       object.rotation = {
         x: 0.16 + speakingPulse * 0.12,
         y: 0.84 + sway * 0.25,
@@ -132,12 +125,19 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
     app.setZoom(SPLINE_ZOOM);
     app.setGlobalEvents(true);
     const baseRotations = new Map<string, Euler>();
+    const baseTransforms = new Map<string, Transform>();
+    for (const object of getArmObjects(app)) {
+      baseTransforms.set(object.uuid, {
+        position: { x: object.position.x, y: object.position.y, z: object.position.z },
+        rotation: { x: object.rotation.x, y: object.rotation.y, z: object.rotation.z },
+      });
+    }
     for (const id of Object.values(EXPRESSION_NODE_IDS)) {
       const object = app.findObjectById(id);
       if (object) baseRotations.set(object.uuid, { x: object.rotation.x, y: object.rotation.y, z: object.rotation.z });
     }
     const keepArmsConnected = () => {
-      repairArmPose(app, performance.now() / 1000, motionStateRef.current, baseRotations);
+      repairArmPose(app, performance.now() / 1000, motionStateRef.current, baseRotations, baseTransforms);
       armRepairFrame.current = window.requestAnimationFrame(keepArmsConnected);
     };
     keepArmsConnected();
@@ -150,7 +150,7 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
           // Never compete with Spline's asset/renderer initialization.
           // Mount the secondary WebGL atmosphere after the character is shown.
           atmosphereTimer.current = window.setTimeout(() => setAtmosphereReady(true), 900);
-        }, 1800);
+        }, 1500);
       });
     });
   };
