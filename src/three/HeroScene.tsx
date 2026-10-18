@@ -19,7 +19,8 @@ type SplineObjectLike = { uuid: string; name: string; position: Point; rotation:
 
 function getArmObjects(app: Application): SplineObjectLike[] {
   const runtime = app as unknown as { getAllObjects?: () => SplineObjectLike[] };
-  return (runtime.getAllObjects?.() ?? []).filter((object) => /^(arm|elbow|forearm|Hand|Hand LEFT|Hand Instance)$/i.test(object.name));
+  const objects = runtime.getAllObjects?.();
+  return (Array.isArray(objects) ? objects : []).filter((object) => /^(arm|elbow|forearm|Hand|Hand LEFT|Hand Instance)$/i.test(object.name));
 }
 
 function repairArmPose(app: Application, time: number, state: MotionState, baseRotations: Map<string, Euler>, baseTransforms: Map<string, Transform>) {
@@ -144,13 +145,14 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
     requestAnimationFrame(() => {
       app.setZoom(SPLINE_ZOOM);
       requestAnimationFrame(() => {
-        window.setTimeout(() => {
-          app.setZoom(SPLINE_ZOOM);
-          onReady?.();
-          // Never compete with Spline's asset/renderer initialization.
-          // Mount the secondary WebGL atmosphere after the character is shown.
-          atmosphereTimer.current = window.setTimeout(() => setAtmosphereReady(true), 900);
-        }, 1500);
+        app.setZoom(SPLINE_ZOOM);
+        // Camera/framing is already locked and the arm repair loop is active.
+        // Reveal the live character now; the old 1.5s delay made the static poster
+        // look frozen even after Spline had finished loading.
+        onReady?.();
+        // Never compete with Spline's asset/renderer initialization.
+        // Mount the secondary WebGL atmosphere after the character is shown.
+        atmosphereTimer.current = window.setTimeout(() => setAtmosphereReady(true), 500);
       });
     });
   };
