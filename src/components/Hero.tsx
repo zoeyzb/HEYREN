@@ -8,8 +8,20 @@ export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
+  const [renderDesktopScene, setRenderDesktopScene] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches);
   const heroRef = useRef<HTMLElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px)');
+    const update = () => {
+      setSceneReady(false);
+      setRenderDesktopScene(media.matches);
+    };
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -56,9 +68,11 @@ export function Hero() {
         <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
           <img className="hero-static-preview-image" src="/hero-spline-preview.webp" alt="" />
         </div>
-        <Suspense fallback={null}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
-        </Suspense>
+        {renderDesktopScene && (
+          <Suspense fallback={null}>
+            <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
+          </Suspense>
+        )}
       </div>
 
       <div className="hero-content relative z-10 mx-auto flex min-h-screen max-w-[1440px] items-center px-6 pb-16 pt-28 sm:px-10 lg:px-14 xl:px-20">

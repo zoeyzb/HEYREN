@@ -220,7 +220,15 @@ body {
 
 /* Remove the screenshot-like intro on desktop without disturbing the live Spline canvas. */
 @media (min-width: 768px) {
-  .hero-static-preview-image { display: none; }
+  .hero-static-preview-image {
+    display: block;
+    height: 82%;
+    opacity: .96;
+    object-fit: contain;
+    filter: saturate(.9) brightness(1.12) contrast(1.07);
+    -webkit-mask-image: radial-gradient(ellipse 54% 59% at 50% 46%, #000 41%, rgba(0,0,0,.7) 63%, transparent 99%);
+    mask-image: radial-gradient(ellipse 54% 59% at 50% 46%, #000 41%, rgba(0,0,0,.7) 63%, transparent 99%);
+  }
   .hero-static-preview { background: radial-gradient(ellipse 34% 42% at 51% 46%, rgba(173,255,82,.065), rgba(112,76,216,.035) 60%, transparent 100%); }
 }
 /* On mobile the 3D scene remains intentionally paused: dissolve the fallback into the page. */
