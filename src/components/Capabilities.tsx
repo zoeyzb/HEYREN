@@ -1,176 +1,30 @@
-import { useFadeUp } from '@/hooks/useReveal';
-import { PhoneIncoming, UserCheck, CalendarClock, MessageSquareQuote, Send, Activity } from 'lucide-react';
-
-const CAPABILITIES = [
-  {
-    icon: PhoneIncoming,
-    title: 'Answer Incoming Calls',
-    desc: 'Make customer calls easier to handle with an AI voice agent configured for business inquiries.',
-    label: 'INCOMING',
-    widget: 'call',
-  },
-  {
-    icon: UserCheck,
-    title: 'Qualify New Leads',
-    desc: 'Collect relevant customer information and identify what each caller needs.',
-    label: 'LEAD QUAL',
-    widget: 'lead',
-  },
-  {
-    icon: CalendarClock,
-    title: 'Schedule Appointments',
-    desc: 'Help callers find and request appointments through connected scheduling systems.',
-    label: 'SCHEDULE',
-    widget: 'appointment',
-  },
-  {
-    icon: MessageSquareQuote,
-    title: 'Handle Common Questions',
-    desc: 'Provide responses using business-approved information.',
-    label: 'FAQ',
-    widget: 'message',
-  },
-  {
-    icon: Send,
-    title: 'Follow Up Intelligently',
-    desc: 'Support appropriate follow-up workflows and handoffs through configured integrations.',
-    label: 'FOLLOW-UP',
-    widget: 'followup',
-  },
+import { useState } from 'react';
+import { ArrowUpRight, PhoneIncoming, ScanFace, CalendarCheck2, Check, MoveRight } from 'lucide-react';
+type Capability = { number:string; title:string; short:string; details:string; signal:string; steps:string[] };
+const data: Capability[] = [
+ {number:'01',title:'Answer every first hello.',short:'Inbound conversations',details:'Give callers a consistent welcome, surface the reason for the call, and keep your team focused when the phone gets busy.',signal:'INBOUND ROUTING',steps:['Incoming connection','Intent recognized','Appropriate response']},
+ {number:'02',title:'Find the opportunity in the details.',short:'Lead qualification',details:'Ask useful questions, capture contact information, and hand over structured context instead of a missed-call notification.',signal:'INTAKE ENGINE',steps:['Caller describes need','Key details collected','Qualified handoff']},
+ {number:'03',title:'Turn interest into the next step.',short:'Appointment requests',details:'Guide callers toward a convenient time and coordinate with your scheduling setup when a compatible integration is in place.',signal:'SCHEDULING FLOW',steps:['Request a time','Check configured system','Confirm or escalate']},
 ];
-
-function MiniWidget({ type }: { type: string }) {
-  if (type === 'call') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-lime animate-pulse" />
-            <span className="text-[10px] font-mono text-silver">Incoming call</span>
-          </div>
-          <span className="text-[10px] font-mono text-silver/50">+1 (555) 0142</span>
-        </div>
-        <div className="flex items-center justify-center gap-0.5 h-6">
-          {Array.from({ length: 18 }).map((_, i) => (
-            <span key={i} className="wave-bar" style={{ animationDelay: `${i * 0.08}s`, color: '#B9FF32', opacity: 0.6 }} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-  if (type === 'lead') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 space-y-1.5">
-        {['Name captured', 'Service need identified', 'Callback number saved'].map((step, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className={`w-1.5 h-1.5 rounded-full ${i < 2 ? 'bg-lime' : 'bg-silver/30'}`} />
-            <span className={`text-[10px] font-mono ${i < 2 ? 'text-silver' : 'text-silver/40'}`}>{step}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  if (type === 'appointment') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3">
-        <div className="text-[10px] font-mono text-silver/50 mb-2">WED — OCT 22</div>
-        <div className="grid grid-cols-3 gap-1">
-          {['9:00', '11:00', '2:00'].map((time, i) => (
-            <div key={i} className={`text-center text-[10px] font-mono py-1 rounded ${i === 2 ? 'bg-lime/15 text-lime border border-lime/30' : 'text-silver/40 border border-ink-line'}`}>
-              {time}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  if (type === 'message') {
-    return (
-      <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3 space-y-1.5">
-        <div className="text-[10px] font-mono text-violet/60">Caller asks:</div>
-        <div className="text-[10px] text-silver/70">"What are your business hours?"</div>
-        <div className="text-[10px] font-mono text-lime/60 pt-1">Heyrin responds:</div>
-        <div className="text-[10px] text-silver/70">"We're open Mon–Fri, 8 AM to 6 PM."</div>
-      </div>
-    );
-  }
-  return (
-    <div className="bg-ink-deep/60 rounded-lg border border-ink-line p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <Activity size={10} className="text-lime" />
-        <span className="text-[10px] font-mono text-silver">Follow-up sent</span>
-      </div>
-      <div className="text-[10px] text-silver/60">SMS confirmation delivered to caller</div>
-    </div>
-  );
-}
-
+const Icons=[PhoneIncoming,ScanFace,CalendarCheck2];
 export function Capabilities() {
-  const { ref, visible } = useFadeUp<HTMLDivElement>();
-
-  return (
-    <section id="capabilities" className="relative py-24 lg:py-32 bg-ink-base overflow-hidden">
-      <div className="absolute inset-0 tech-grid opacity-20" />
-      <div className="absolute top-0 right-0 w-[500px] h-[400px] bg-violet/4 rounded-full blur-[120px] pointer-events-none" />
-
-      <div ref={ref} className={`relative max-w-[1200px] mx-auto px-6 lg:px-10 fade-up ${visible ? 'visible' : ''}`}>
-        <div className="mb-12 lg:mb-16">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-6 h-px bg-lime/60" />
-            <span className="text-xs font-mono tracking-[0.2em] text-lime/80 uppercase">Capabilities</span>
+ const [selected,setSelected]=useState(0);
+ const active=data[selected];
+ const Icon=Icons[selected];
+ return <section id="capabilities" className="rin-section rin-capabilities">
+   <div className="rin-container">
+     <div className="rin-overline"><span>02 / CAPABILITIES</span><span>BEYOND THE ANSWER</span></div>
+     <div className="rin-heading-row"><h2>Built to do more<br/><em>than pick up.</em></h2><p>Not a maze of features. Three connected behaviors that help turn an incoming call into something useful.</p></div>
+     <div className="rin-capability-layout">
+       <div className="rin-capability-index">{data.map((item,i)=><button key={item.number} type="button" aria-pressed={selected===i} className={`rin-capability-choice ${i===selected?'is-selected':''}`} onClick={()=>setSelected(i)}><span>{item.number}</span><strong>{item.short}</strong><MoveRight size={18}/></button>)}</div>
+       <div className="rin-capability-display" key={selected}>
+          <div className="rin-capability-copy"><div className="rin-mini-label">{active.signal} / FEATURE {active.number}</div><h3>{active.title}</h3><p>{active.details}</p><a href="#contact" className="rin-text-link">Design your own flow <ArrowUpRight size={16}/></a></div>
+          <div className="rin-capability-graphic" aria-label={active.signal + ' illustrative workflow'}>
+            <div className="rin-capability-radar"><span className="rin-c-ring one"/><span className="rin-c-ring two"/><span className="rin-c-ring three"/><div className="rin-capability-center"><Icon size={36}/></div><span className="rin-radar-node node1"/><span className="rin-radar-node node2"/><span className="rin-radar-node node3"/></div>
+            <div className="rin-capability-flow">{active.steps.map((s,i)=><div key={s}><span>{i===2?<Check size={12}/>:String(i+1).padStart(2,'0')}</span>{s}</div>)}</div>
           </div>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-soft tracking-tight">
-            More than answering calls.
-          </h2>
-        </div>
-
-        {/* Asymmetric grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-          {CAPABILITIES.map((cap, idx) => {
-            const Icon = cap.icon;
-            // Make first and last items span differently for asymmetry
-            const colSpan = idx === 0 ? 'lg:col-span-1' : idx === 4 ? 'lg:col-span-1' : '';
-            return (
-              <div
-                key={cap.title}
-                className={`${colSpan} group relative p-5 rounded-xl border border-ink-line bg-ink-panel/40 hover:bg-ink-panel/70 hover:border-lime/20 transition-all duration-500`}
-              >
-                {/* Label */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[9px] font-mono tracking-[0.15em] text-silver/40 uppercase">{cap.label}</span>
-                  <div className="w-7 h-7 rounded-lg bg-ink-deep border border-ink-line flex items-center justify-center group-hover:border-lime/30 transition-colors">
-                    <Icon size={14} className="text-silver group-hover:text-lime transition-colors" />
-                  </div>
-                </div>
-
-                <h3 className="text-base font-medium text-soft mb-2 tracking-tight">{cap.title}</h3>
-                <p className="text-xs text-silver/70 leading-relaxed mb-4">{cap.desc}</p>
-
-                <MiniWidget type={cap.widget} />
-              </div>
-            );
-          })}
-
-          {/* Extra summary cell */}
-          <div className="relative p-5 rounded-xl border border-violet/15 bg-gradient-to-br from-violet/5 to-transparent flex flex-col justify-between">
-            <div>
-              <span className="text-[9px] font-mono tracking-[0.15em] text-violet/60 uppercase">SYSTEM</span>
-              <h3 className="text-base font-medium text-soft mt-3 mb-2 tracking-tight">Connected Intelligence</h3>
-              <p className="text-xs text-silver/70 leading-relaxed">
-                Each capability connects to your business systems through configured integrations.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <div className="flex -space-x-1">
-                {['#B9FF32', '#A16BFF', '#929A96'].map((c, i) => (
-                  <div key={i} className="w-2 h-2 rounded-full border border-ink-base" style={{ background: c, opacity: 0.6 }} />
-                ))}
-              </div>
-              <span className="text-[10px] font-mono text-silver/50">Integrations ready</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+       </div>
+     </div>
+   </div>
+ </section>;
 }

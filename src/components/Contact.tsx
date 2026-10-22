@@ -62,6 +62,10 @@ export function Contact() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Contact form is not configured. Please email us directly.");
+      }
+
       const response = await fetch(`${supabaseUrl}/functions/v1/contact-inquiry`, {
         method: 'POST',
         headers: {
@@ -71,7 +75,7 @@ export function Contact() {
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         setStatus('error');
@@ -82,9 +86,9 @@ export function Contact() {
       setStatus('success');
       setEmailConfigured(result.emailConfigured !== false);
       setData(EMPTY);
-    } catch {
+    } catch (error) {
       setStatus('error');
-      setErrorMsg('Network error. Please try again or email us directly.');
+      setErrorMsg(error instanceof Error && error.message.includes('not configured') ? error.message : 'Unable to send right now. Please retry or email us directly.');
     }
   };
 
@@ -96,7 +100,7 @@ export function Contact() {
   }, [status]);
 
   return (
-    <section id="contact" className="relative py-24 lg:py-32 bg-ink-deep overflow-hidden">
+    <section id="contact" className="relative py-24 lg:py-32 bg-ink-deep overflow-hidden rin-contact">
       <div className="absolute inset-0 tech-grid-fine opacity-20" />
       <div className="absolute top-1/2 left-1/4 w-[500px] h-[400px] bg-lime/3 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-violet/3 rounded-full blur-[100px] pointer-events-none" />
@@ -110,7 +114,7 @@ export function Contact() {
               <span className="text-xs font-mono tracking-[0.2em] text-lime/80 uppercase">Contact</span>
             </div>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-soft tracking-tight mb-4">
-              Ready to give your<br />business a voice?
+              Every call<br />could be more.
             </h2>
             <p className="text-sm text-silver/70 mb-8 leading-relaxed max-w-sm">
               Tell us about your business. Let's explore what Heyrin could handle for you.
@@ -131,8 +135,8 @@ export function Contact() {
             </div>
 
             <div className="mt-8 pt-6 border-t border-ink-line">
-              <div className="text-[10px] font-mono text-silver/40 uppercase tracking-wider mb-2">Response time</div>
-              <p className="text-xs text-silver/60">We typically respond within one business day.</p>
+              <div className="text-[10px] font-mono text-silver/40 uppercase tracking-wider mb-2">Next step</div>
+              <p className="text-xs text-silver/60">Send a few details and we will get back to you.</p>
             </div>
           </div>
 
@@ -169,6 +173,7 @@ export function Contact() {
                   {/* Honeypot — hidden from users */}
                   <input
                     type="text"
+                    aria-hidden="true"
                     name="company_website"
                     value={data.honeypot}
                     onChange={(e) => update('honeypot', e.target.value)}
@@ -220,10 +225,14 @@ export function Contact() {
                   />
 
                   <div>
-                    <label className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
+                    <label htmlFor="heyrin-message" className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
                       What should your AI agent handle? <span className="text-lime">*</span>
                     </label>
                     <textarea
+                      id="heyrin-message"
+                      name="message"
+                      required
+                      minLength={10}
                       value={data.message}
                       onChange={(e) => update('message', e.target.value)}
                       placeholder="Answering calls, booking appointments, qualifying leads..."
@@ -233,7 +242,7 @@ export function Contact() {
                   </div>
 
                   {status === 'error' && (
-                    <div className="flex items-start gap-2.5 p-3.5 rounded-xl border border-red-500/20 bg-red-500/5" style={{ animation: 'fadeIn 0.3s ease' }}>
+                    <div role="alert" className="flex items-start gap-2.5 p-3.5 rounded-xl border border-red-500/20 bg-red-500/5" style={{ animation: 'fadeIn 0.3s ease' }}>
                       <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-red-300/90">{errorMsg}</p>
                     </div>
@@ -258,7 +267,7 @@ export function Contact() {
                   </button>
 
                   <p className="text-[10px] font-mono text-silver/30 text-center uppercase tracking-wider">
-                    We respect your privacy — no spam, ever.
+                    We use these details to respond to your inquiry.
                   </p>
                 </form>
               )}
@@ -290,7 +299,7 @@ interface FieldProps {
 function Field({ label, value, onChange, placeholder, type = 'text', required, optional }: FieldProps) {
   return (
     <div>
-      <label className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
+      <label htmlFor={`field-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="block text-xs font-mono tracking-wider text-silver/50 uppercase mb-1.5">
         {label}
         {required && <span className="text-lime"> *</span>}
         {optional && <span className="text-silver/30"> (optional)</span>}
@@ -300,6 +309,9 @@ function Field({ label, value, onChange, placeholder, type = 'text', required, o
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        id={`field-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+        name={label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
+        required={required}
         className="w-full bg-ink-deep/60 border border-ink-line rounded-xl px-4 py-2.5 text-sm text-soft placeholder:text-silver/30 focus:border-lime/30 focus:outline-none transition-colors"
       />
     </div>

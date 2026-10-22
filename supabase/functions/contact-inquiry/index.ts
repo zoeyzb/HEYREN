@@ -16,6 +16,15 @@ interface InquiryBody {
   honeypot?: string;
 }
 
+function escapeHtml(value: string | undefined): string {
+  return (value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function hashIP(ip: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(ip + "heyrin-salt-v1");
@@ -120,7 +129,6 @@ Deno.serve(async (req: Request) => {
     const toEmail = "sierra@recoverrevenue.company";
 
     let emailSent = false;
-    let emailError: string | undefined;
 
     if (resendApiKey) {
       try {
@@ -128,14 +136,14 @@ Deno.serve(async (req: Request) => {
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #111416; padding: 32px; border-radius: 12px;">
             <div style="font-size: 24px; font-weight: bold; color: #B9FF32; letter-spacing: -0.03em; margin-bottom: 24px;">HEYRIN — New Inquiry</div>
             <table style="width: 100%; color: #F6F7F4; font-size: 14px;">
-              <tr><td style="color: #929A96; padding: 4px 0; width: 120px;">Name</td><td>${body.name}</td></tr>
-              <tr><td style="color: #929A96; padding: 4px 0;">Email</td><td>${body.email}</td></tr>
-              <tr><td style="color: #929A96; padding: 4px 0;">Company</td><td>${body.company || "—"}</td></tr>
-              <tr><td style="color: #929A96; padding: 4px 0;">Phone</td><td>${body.phone || "—"}</td></tr>
-              <tr><td style="color: #929A96; padding: 4px 0;">Website</td><td>${body.website || "—"}</td></tr>
+              <tr><td style="color: #929A96; padding: 4px 0; width: 120px;">Name</td><td>${escapeHtml(body.name)}</td></tr>
+              <tr><td style="color: #929A96; padding: 4px 0;">Email</td><td>${escapeHtml(body.email)}</td></tr>
+              <tr><td style="color: #929A96; padding: 4px 0;">Company</td><td>${escapeHtml(body.company) || "—"}</td></tr>
+              <tr><td style="color: #929A96; padding: 4px 0;">Phone</td><td>${escapeHtml(body.phone) || "—"}</td></tr>
+              <tr><td style="color: #929A96; padding: 4px 0;">Website</td><td>${escapeHtml(body.website) || "—"}</td></tr>
             </table>
             <div style="margin-top: 20px; color: #929A96; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">What should the AI agent handle?</div>
-            <div style="color: #F6F7F4; font-size: 14px; line-height: 1.6; margin-top: 8px; padding: 16px; background: #050607; border-radius: 8px;">${body.message}</div>
+            <div style="color: #F6F7F4; font-size: 14px; line-height: 1.6; margin-top: 8px; padding: 16px; background: #050607; border-radius: 8px;">${escapeHtml(body.message)}</div>
           </div>
         `;
 
@@ -158,15 +166,11 @@ Deno.serve(async (req: Request) => {
           emailSent = true;
         } else {
           const errText = await resendResponse.text();
-          emailError = `Resend error: ${resendResponse.status}`;
           console.error("Resend error:", errText);
         }
       } catch (err) {
-        emailError = `Email send failed: ${err.message}`;
         console.error("Email error:", err);
       }
-    } else {
-      emailError = "RESEND_API_KEY not configured";
     }
 
     return new Response(
