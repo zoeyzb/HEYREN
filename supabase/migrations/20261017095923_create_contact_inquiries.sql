@@ -16,8 +16,8 @@
 
 2. Security
 - Enable RLS on `contact_inquiries`.
-- Allow anon + authenticated INSERT only (public contact form).
-- No SELECT/UPDATE/DELETE from the client — inquiries are managed server-side.
+- Do not grant anonymous direct INSERT: all public submissions pass through the rate-limited, validated Edge Function.
+- A service-role-only Edge Function handles writes; clients cannot read, update, or delete submissions.
 */
 
 CREATE TABLE IF NOT EXISTS contact_inquiries (
@@ -36,9 +36,7 @@ CREATE TABLE IF NOT EXISTS contact_inquiries (
 ALTER TABLE contact_inquiries ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "anon_insert_inquiries" ON contact_inquiries;
-CREATE POLICY "anon_insert_inquiries"
-  ON contact_inquiries FOR INSERT
-  TO anon, authenticated WITH CHECK (true);
+-- No public INSERT policy: the service-role-backed Edge Function is the only writer.
 
 CREATE INDEX IF NOT EXISTS idx_contact_inquiries_created_at ON contact_inquiries (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_contact_inquiries_ip_hash ON contact_inquiries (ip_hash);

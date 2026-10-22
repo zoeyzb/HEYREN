@@ -89,11 +89,16 @@ Deno.serve(async (req: Request) => {
 
     // Check rate limit — max 3 submissions per hour per IP
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { data: recent } = await supabase
+    const { data: recent, error: rateError } = await supabase
       .from("contact_inquiries")
       .select("id")
       .eq("ip_hash", ipHash)
       .gte("created_at", oneHourAgo);
+
+    if (rateError) {
+      console.error("Rate limit query failed:", rateError);
+      return new Response(JSON.stringify({ error: "Please try again later." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (recent && recent.length >= 3) {
       return new Response(

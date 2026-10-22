@@ -34,7 +34,9 @@ test('mobile: menu, interactions and no overflow',async({page})=>{
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
-test('contact form: validation and visible unconfigured error',async({page})=>{
+test('contact form: validation and transparent submission failure',async({page})=>{
+  // Deliberately intercept the request: browser tests never create fake customer leads.
+  await page.route('**/functions/v1/contact-inquiry',route=>route.fulfill({status:503,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({error:'Test-only service unavailable'})}));
   await page.goto('/');
   const send=page.getByRole('button',{name:/Build My AI Agent/});
   await send.click();
@@ -43,7 +45,7 @@ test('contact form: validation and visible unconfigured error',async({page})=>{
   await page.getByRole('textbox',{name:'Business email'}).fill('tester@example.org');
   await page.getByRole('textbox',{name:/What should your AI agent handle/}).fill('Answer incoming customer service requests for our office.');
   await send.click();
-  await expect(page.getByRole('alert')).toContainText('not configured');
+  await expect(page.getByRole('alert')).toContainText(/not configured|Test-only service unavailable/);
 });
 test('visual capture: desktop and mobile',async({page})=>{
   for (const [size,w,h] of [['desktop',1440,900],['mobile',390,844]] as const) {
