@@ -20,7 +20,7 @@ type SplineObjectLike = { uuid: string; name: string; position: Point; rotation:
 function getArmObjects(app: Application): SplineObjectLike[] {
   const runtime = app as unknown as { getAllObjects?: () => SplineObjectLike[] };
   const objects = runtime.getAllObjects?.();
-  return (Array.isArray(objects) ? objects : []).filter((object) => /^(arm|elbow|forearm|Hand|Hand LEFT|Hand Instance)$/i.test(object.name));
+  return (Array.isArray(objects) ? objects : []).filter((object) => /(?:^|[\s_-])(arm|elbow|forearm|hand|wrist)(?:[\s_-]|$)/i.test(object.name));
 }
 
 function repairArmPose(app: Application, time: number, state: MotionState, baseRotations: Map<string, Euler>, baseTransforms: Map<string, Transform>) {
@@ -30,22 +30,23 @@ function repairArmPose(app: Application, time: number, state: MotionState, baseR
   const armLift = -0.06 - listeningLift + speakingPulse * 0.22;
   const elbowBend = -0.10 - listeningLift * 0.45 + speakingPulse * 0.12;
   for (const object of getArmObjects(app)) {
+    const name = object.name.toLowerCase();
     const baseTransform = baseTransforms.get(object.uuid);
-    if (baseTransform && object.name !== 'arm') object.position = baseTransform.position;
-    if (object.name === 'elbow') {
+    // Keep every segment at its authored attachment point. Spline's initial
+    // transition tracks can otherwise pull an elbow/hand away for a few frames.
+    if (baseTransform) object.position = baseTransform.position;
+    if (name.includes('elbow')) {
       object.rotation = { x: 0, y: elbowBend + sway * 0.35, z: 0 };
-    } else if (object.name === 'forearm') {
+    } else if (name.includes('forearm') || name.includes('lower arm') || name.includes('wrist')) {
       object.rotation = { x: 0.27 - speakingPulse * 0.18, y: 0, z: 0 };
-    } else if (object.name === 'Hand') {
+    } else if (name.includes('hand')) {
       object.rotation = {
         x: 0.16 + speakingPulse * 0.12,
         y: 0.84 + sway * 0.25,
         z: -0.56,
       };
-    } else if (object.name === 'arm') {
+    } else if (name === 'arm' || name.includes('upper arm') || /^arm(?:\s|_|-)/.test(name)) {
       object.rotation = { x: armLift + sway, y: 0, z: 0 };
-    } else if (object.name === 'Hand LEFT') {
-      object.rotation = { x: 0, y: 0, z: 0.07 + sway * 0.2 };
     }
   }
 
@@ -143,17 +144,21 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
     };
     keepArmsConnected();
     requestAnimationFrame(() => {
-      app.setZoom(SPLINE_ZOOM);
-      requestAnimationFrame(() => {
+      const cameraLockStarted = performance.now();
+      const lockCameraDuringIntro = () => {
         app.setZoom(SPLINE_ZOOM);
-        // Camera/framing is already locked and the arm repair loop is active.
-        // Reveal the live character now; the old 1.5s delay made the static poster
-        // look frozen even after Spline had finished loading.
+        // Spline's authored camera intro can overwrite a single setZoom call.
+        // Keep the camera framed for the whole intro, then reveal the character.
+        if (performance.now() - cameraLockStarted < 4200) {
+          window.requestAnimationFrame(lockCameraDuringIntro);
+          return;
+        }
         onReady?.();
         // Never compete with Spline's asset/renderer initialization.
         // Mount the secondary WebGL atmosphere after the character is shown.
-        atmosphereTimer.current = window.setTimeout(() => setAtmosphereReady(true), 500);
-      });
+        atmosphereTimer.current = window.setTimeout(() => setAtmosphereReady(true), 350);
+      };
+      lockCameraDuringIntro();
     });
   };
 
