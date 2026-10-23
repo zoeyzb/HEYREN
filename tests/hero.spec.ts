@@ -1,50 +1,55 @@
 import { expect, test } from '@playwright/test';
 
-test('hero displays a masked robot while Spline loads slowly', async ({ page }) => {
-  test.setTimeout(60_000);
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.route('**/scene.splinecode', async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    await route.continue();
+test('robot poster is visible immediately and does not load WebGL', async ({ page }) => {
+  const heavyRequests: string[] = [];
+  page.on('request', request => {
+    if (/splinecode|prod\.spline|three.*\.js|wasm|runtime-webgpu/i.test(request.url())) heavyRequests.push(request.url());
   });
-  await page.goto('/');
-  await expect(page.locator('.hero-static-preview-image')).toBeVisible();
-  await expect(page.locator('.hero-scene')).not.toHaveClass(/is-ready/);
-  await page.screenshot({ path: 'review/hero-loading.png', animations: 'disabled' });
-  await expect(page.locator('.hero-scene')).toHaveClass(/is-ready/, { timeout: 40_000 });
-  await expect(page.locator('.hero-static-preview')).toHaveCSS('opacity', '0', { timeout: 4000 });
-  await expect(page.locator('#home h1')).toContainText('Meet the voice');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const poster = page.locator('.hero-robot-poster');
+  await expect(poster).toBeVisible();
+  await expect(poster).toHaveJSProperty('complete', true);
+  await page.waitForTimeout(800);
+  expect(heavyRequests).toEqual([]);
+  expect(await page.locator('#home canvas').count()).toBe(0);
+  await page.screenshot({path:'review/hero-stable-desktop.png',animations:'disabled'});
 });
 
-test('hero settles to live character without overflow or browser errors', async ({ page }) => {
-  test.setTimeout(50_000);
+test('robot video starts and the site remains interactive', async ({ page }) => {
   const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await page.setViewportSize({ width: 1440, height: 900 });
+  page.on('pageerror', e => errors.push(e.message));
+  await page.setViewportSize({width:1440,height:900});
   await page.goto('/');
-  await expect(page.locator('.hero-scene')).toHaveClass(/is-ready/, { timeout: 35_000 });
-  await page.waitForTimeout(2300);
-  await page.screenshot({ path: 'review/hero-repaired.png', animations: 'disabled' });
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
-  expect(overflow).toBeLessThanOrEqual(1);
+  const video = page.locator('.hero-robot-loop');
+  await expect(video).toHaveClass(/is-playing/, { timeout:10000 });
+  expect(await video.evaluate((v: HTMLVideoElement)=>v.readyState)).toBeGreaterThanOrEqual(2);
+  await expect(page.locator('#home h1')).toContainText('Meet the voice');
+  await page.getByRole('button',{name:/Hear Heyrin in Action/}).click();
+  await expect(page).toHaveURL(/#experience|\/$/);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBeLessThanOrEqual(1);
   expect(errors).toEqual([]);
 });
 
-
-test('mobile skips 3D downloads and restores its preview after a desktop resize', async ({ page }) => {
-  test.setTimeout(65_000);
-  const sceneRequests: string[] = [];
-  page.on('request', (request) => {
-    if (request.url().includes('scene.splinecode')) sceneRequests.push(request.url());
-  });
-  await page.setViewportSize({ width: 390, height: 844 });
+test('failed media and reduced motion preserve the robot image', async ({page})=>{
+  await page.route('**/hero-robot-loop.mp4', r=>r.abort());
   await page.goto('/');
+  await page.waitForTimeout(1000);
+  await expect(page.locator('.hero-robot-poster')).toBeVisible();
+  await expect(page.locator('.hero-robot-loop')).not.toHaveClass(/is-playing/);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect(page.locator('.hero-robot-loop')).toHaveCSS('display','none');
+});
+
+test('mobile shows stable hero without downloading spline or overflow',async({page})=>{
+  const urls: string[]=[];page.on('request',r=>{if(/splinecode|runtime-webgpu/i.test(r.url()))urls.push(r.url())});
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/');
+  await expect(page.locator('.hero-robot-poster')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Toggle menu'})).toBeVisible();
   await page.waitForTimeout(1600);
-  expect(sceneRequests).toHaveLength(0);
-  await expect(page.locator('.hero-static-preview-image')).toBeVisible();
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await expect(page.locator('.hero-scene')).toHaveClass(/is-ready/, { timeout: 35_000 });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator('.hero-scene')).not.toHaveClass(/is-ready/);
-  await expect(page.locator('.hero-static-preview-image')).toBeVisible();
+  expect(urls).toEqual([]);
+  expect(await page.locator('#home canvas').count()).toBe(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBeLessThanOrEqual(1);
+  await page.screenshot({path:'review/hero-stable-mobile.png',animations:'disabled'});
 });
