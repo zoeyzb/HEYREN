@@ -1,11 +1,31 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import gsap from 'gsap';
 
+const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default: m.HeroScene })));
+
 export function Hero() {
-  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
+  const [sceneReady, setSceneReady] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+    const cycle = window.setInterval(() => {
+      setHeroState((prev) => (prev === 'idle' ? 'listening' : prev === 'listening' ? 'speaking' : 'idle'));
+    }, 4200);
+    return () => window.clearInterval(cycle);
+  }, []);
+
+  useEffect(() => {
+    if (!heroRef.current || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setHeroVisible(entry.isIntersecting), { threshold: 0.01 });
+    observer.observe(heroRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   useLayoutEffect(() => {
     const context = gsap.context(() => {
@@ -32,29 +52,13 @@ export function Hero() {
       <div className="absolute -left-32 top-[24%] h-[34rem] w-[34rem] rounded-full bg-lime/5 blur-[130px] pointer-events-none" />
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
-      <div ref={sceneRef} className="hero-scene hero-scene-stable absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px]" aria-label="Animated Heyrin AI robot">
-        <div className="hero-robot-portrait" aria-hidden="true">
-          <img src="/hero-robot-clean.webp" alt="" className="hero-robot-poster" fetchPriority="high" decoding="async" />
-          <video
-            className={`hero-robot-loop ${videoPlaying ? 'is-playing' : ''}`}
-            autoPlay muted loop playsInline preload="auto"
-            poster="/hero-robot-clean.webp"
-            onPlaying={() => setVideoPlaying(true)}
-            onError={() => setVideoPlaying(false)}
-            aria-hidden="true"
-          >
-            <source src="/hero-robot-loop.mp4" type="video/mp4" />
-          </video>
+      <div ref={sceneRef} className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
+        <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
+          <img className="hero-static-preview-image" src="/hero-spline-preview.webp" alt="" />
         </div>
-        <svg className="hero-orbit-vectors" aria-hidden="true" viewBox="0 0 920 900" preserveAspectRatio="xMidYMid meet">
-          <ellipse className="hero-vector-ring hero-vector-lime" cx="480" cy="462" rx="410" ry="108" transform="rotate(-5 480 462)" />
-          <ellipse className="hero-vector-ring hero-vector-violet" cx="470" cy="450" rx="510" ry="108" transform="rotate(-19 470 450)" />
-          <circle cx="85" cy="488" r="7" fill="#b9ff32" opacity=".42" />
-          <circle cx="820" cy="380" r="10" fill="#a16bff" opacity=".48" />
-          <circle cx="776" cy="315" r="3" fill="#b9ff32" opacity=".6" />
-          <circle cx="161" cy="241" r="2" fill="#b9ff32" opacity=".7" />
-          <circle cx="880" cy="625" r="2" fill="#a16bff" opacity=".6" />
-        </svg>
+        <Suspense fallback={null}>
+          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
+        </Suspense>
       </div>
 
       <div className="hero-content relative z-10 mx-auto flex min-h-screen max-w-[1440px] items-center px-6 pb-16 pt-28 sm:px-10 lg:px-14 xl:px-20">

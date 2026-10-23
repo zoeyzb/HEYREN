@@ -48,7 +48,6 @@ test('contact form: validation and transparent submission failure',async({page})
   await expect(page.getByRole('alert')).toContainText(/not configured|Test-only service unavailable/);
 });
 test('visual capture: desktop and mobile',async({page})=>{
-  test.setTimeout(90_000);
   for (const [size,w,h] of [['desktop',1440,900],['mobile',390,844]] as const) {
     await page.setViewportSize({width:w,height:h});
     await page.goto('/');
