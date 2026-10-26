@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, CalendarCheck2, Check, Headphones, Pause, Play, RotateCcw, CircleDot } from 'lucide-react';
+import { LiveVoiceAgent } from './LiveVoiceAgent';
 
 type Dialogue = { speaker: 'Heyrin' | 'Caller'; text: string; at: number };
 type Scenario = { id: string; title: string; kicker: string; subtitle: string; result: string; steps: string[]; dialogue: Dialogue[] };
@@ -113,6 +114,7 @@ export function VoiceDemo() {
           <a href="#contact" className="rin-text-link">Explore your workflow <ArrowUpRight size={16}/></a>
         </aside>
       </div>
+      <LiveVoiceAgent />
     </div>
   </section>;
 }
