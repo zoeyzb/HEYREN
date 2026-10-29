@@ -27,6 +27,22 @@ type VoiceWindow = Window & {
 const GREETING = 'Hello! I’m Heyrin. Ask me about booking an appointment, handling a customer question, or qualifying a lead.';
 const INITIAL: Message[] = [{ role: 'Heyrin', text: GREETING }];
 
+function chooseVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
+  const english = voices.filter(voice => /^en([_-]|$)/i.test(voice.lang));
+  const candidates = english.length ? english : voices;
+  const score = (voice: SpeechSynthesisVoice) => {
+    const name = voice.name.toLowerCase();
+    let value = voice.lang.toLowerCase().startsWith('en-us') ? 3 : 0;
+    if (/samantha|ava|jenny|aria|allison|zoe|serena/.test(name)) value += 5;
+    if (/natural|enhanced|premium|neural/.test(name)) value += 4;
+    if (/google us english|microsoft jenny|microsoft aria/.test(name)) value += 3;
+    if (voice.localService) value += 1;
+    if (/compact|novelty|whisper/.test(name)) value -= 4;
+    return value;
+  };
+  return [...candidates].sort((a, b) => score(b) - score(a))[0];
+}
+
 function nextReply(input: string, step: { current: BookingStep }): string {
   const text = input.toLowerCase().trim();
   if (!text) return 'I didn’t catch that. Could you try again?';
@@ -40,26 +56,26 @@ function nextReply(input: string, step: { current: BookingStep }): string {
   }
   if (step.current === 'day') {
     step.current = 'none';
-    return 'Got it. In a fully configured agent, that request could go to the scheduling team. This is a demonstration: no appointment has been booked or sent.';
+    return 'Thanks. I’ve captured your preferred time. This preview isn’t connected to a live calendar, so nothing has been booked. With calendar access configured, Heyrin can confirm a booking automatically.';
   }
   if (/\b(book|appointment|schedule|reserve|reschedule|visit)\b/.test(text)) {
     step.current = 'service';
-    return 'Absolutely. Which service would you like an appointment for?';
+    return 'Absolutely. What service do you need, and is there a day that works best for you?';
   }
   if (/\b(price|pricing|cost|quote|rate|how much)\b/.test(text)) {
-    return 'I can discuss pricing when a business connects its actual price list. No rates are connected to this preview, so I won’t invent a quote.';
+    return 'I can give you an accurate answer once your business’s real price list is connected. It’s better not to guess at a quote.';
   }
   if (/\b(hours|open|closing|weekend|location|address)\b/.test(text)) {
-    return 'A deployed Heyrin agent can use a business’s verified opening hours and location. Those details aren’t connected to this preview yet.';
+    return 'I can check that using your business’s verified hours and location. Those details aren’t connected to this preview yet.';
   }
   if (/\b(human|person|representative|someone|contact|handoff)\b/.test(text)) {
-    return 'For a real handoff, the agent needs a connected phone or inbox workflow. You can contact the Heyrin team using the form below.';
+    return 'Of course. What would you like the team to help with? This preview can’t transfer a live call, but a configured phone integration can route callers to the right person.';
   }
   if (/\b(lead|customer|business|hvac|plumb|repair|service|roof)\b/.test(text)) {
-    return 'Heyrin can collect customer requests and qualify leads when your business workflow is connected. Tell me if you want to book an example appointment.';
+    return 'I can help with that. Tell me a little more about what you need, and I’ll guide you to the right next step.';
   }
   if (/\b(hello|hi|hey|help|what can you do)\b/.test(text)) return GREETING;
-  return 'I can demonstrate appointment intake, lead qualification, and common customer questions. Which would you like to try?';
+  return 'Sure. I can walk you through appointment requests, customer questions, or a new service inquiry. What would you like help with first?';
 }
 
 export function LiveVoiceAgent() {
@@ -71,6 +87,7 @@ export function LiveVoiceAgent() {
   const [lastReply, setLastReply] = useState(GREETING);
   const [micSupported, setMicSupported] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const recognitionRef = useRef<Recognition | null>(null);
   const bookingRef = useRef<BookingStep>('none');
   const liveRef = useRef(true);
@@ -82,7 +99,13 @@ export function LiveVoiceAgent() {
     const voiceWindow = window as VoiceWindow;
     setMicSupported(Boolean((voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition) && window.isSecureContext));
     setSpeechSupported('speechSynthesis' in window && 'SpeechSynthesisUtterance' in window);
+    const refreshVoices = () => {
+      if ('speechSynthesis' in window) setAvailableVoices(window.speechSynthesis.getVoices());
+    };
+    refreshVoices();
+    if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', refreshVoices);
     return () => {
+      if ('speechSynthesis' in window) window.speechSynthesis.removeEventListener('voiceschanged', refreshVoices);
       liveRef.current = false;
       recognitionRef.current?.abort();
       recognitionRef.current = null;
@@ -108,8 +131,16 @@ export function LiveVoiceAgent() {
     }
     stopSpeech();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.96;
+    const voice = chooseVoice(availableVoices.length ? availableVoices : window.speechSynthesis.getVoices());
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = 'en-US';
+    }
+    utterance.rate = 0.92;
+    utterance.pitch = 1.02;
+    utterance.volume = 1;
     utterance.onstart = () => {
       if (liveRef.current) { speakingRef.current = true; setStage('speaking'); }
     };

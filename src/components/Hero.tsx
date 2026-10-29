@@ -9,7 +9,6 @@ export function Hero() {
   const [sceneReady, setSceneReady] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
-  const sceneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -36,7 +35,7 @@ export function Hero() {
         .fromTo('.hero-copy', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, '-=0.52')
         .fromTo('.hero-actions', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.65 }, '-=0.4')
         .fromTo('.hero-meta', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55 }, '-=0.3');
-      gsap.fromTo(sceneRef.current, { opacity: 0, x: 56, scale: 0.92 }, { opacity: 1, x: 0, scale: 1, duration: 1.35, delay: 0.15, ease: 'power4.out' });
+      // Keep the robot layer visible from the first paint; only animate ambient glow.
       gsap.to('.hero-orbit-glow', { scale: 1.08, opacity: 0.72, duration: 3.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
     }, heroRef);
     return () => context.revert();
@@ -52,9 +51,9 @@ export function Hero() {
       <div className="absolute -left-32 top-[24%] h-[34rem] w-[34rem] rounded-full bg-lime/5 blur-[130px] pointer-events-none" />
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
-      <div ref={sceneRef} className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
+      <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
         <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
-          <img className="hero-static-preview-image" src="/hero-spline-preview.webp" alt="" />
+          <img className="hero-static-preview-image" src="/heyrin-robot-instant.webp" alt="" width={864} height={900} fetchPriority="high" decoding="async" />
         </div>
         <Suspense fallback={null}>
           <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
@@ -69,13 +68,11 @@ export function Hero() {
             <span className="hidden text-[11px] font-mono uppercase tracking-[0.18em] text-silver/45 sm:inline">Voice intelligence</span>
           </div>
 
-          <h1 className="hero-heading max-w-[700px] font-display text-[3.35rem] leading-[0.98] tracking-[-0.055em] text-soft sm:text-6xl lg:text-[5.35rem]">
-            Meet the voice
-            <br />
-            <span className="text-soft">behind your</span>
+          <h1 className="hero-heading max-w-[700px] font-display text-[3.35rem] leading-[0.98] tracking-[-0.055em] text-soft sm:text-6xl lg:text-[5.1rem]">
+            Never miss
             <br />
             <span className="hero-heading-accent relative inline-block text-lime text-glow-lime">
-              business.
+              another call.
               <span className="absolute -bottom-3 left-0 h-px w-[88%] bg-gradient-to-r from-lime/80 via-lime/30 to-transparent" />
             </span>
           </h1>
@@ -86,7 +83,7 @@ export function Hero() {
               <span className="text-violet-glow">Always ready.</span>
             </p>
             <p className="mt-4 max-w-[500px] text-[15px] leading-7 text-silver sm:text-base">
-              An intelligent AI voice agent that answers calls, handles inquiries, and helps turn every conversation into an opportunity.
+              An AI voice agent that answers every call, handles routine questions, and helps turn more conversations into customers.
             </p>
           </div>
 

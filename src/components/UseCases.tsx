@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ArrowUpRight, Home, Scale, Building2, CalendarDays, BriefcaseBusiness } from 'lucide-react';
 const industries=[
- {name:'Home services',icon:Home,question:'“My kitchen sink is leaking. Can someone take a look?”',answer:'“I can capture the details and your preferred visit time.”',flow:['Urgency noted','Service type identified','Visit request']},
- {name:'Legal practices',icon:Scale,question:'“I need to arrange an initial consultation.”',answer:'“I can collect your contact details and the type of matter.”',flow:['Practice area','New inquiry intake','Staff follow-up']},
- {name:'Real estate',icon:Building2,question:'“I’d like to arrange a viewing for a property.”',answer:'“Which listing are you interested in and when are you free?”',flow:['Property identified','Time preference','Viewing request']},
- {name:'Clinics & appointments',icon:CalendarDays,question:'“Can I reschedule my appointment?”',answer:'“I can help check what the next available options are.”',flow:['Existing booking','New time preference','Scheduling workflow']},
- {name:'Professional services',icon:BriefcaseBusiness,question:'“Can I speak with someone about your services?”',answer:'“Absolutely. Which part of your business needs support?”',flow:['Service category','Contact information','Team handoff']},
+ {name:'Home services',icon:Home,question:'“My kitchen sink is leaking. Could someone come out today?”',answer:'“I can help. What’s the property address? I’ll check the team’s availability and arrange the soonest visit.”',flow:['Urgency and address','Check team availability','Arrange the next visit']},
+ {name:'Legal practices',icon:Scale,question:'“I’d like to book an initial consultation.”',answer:'“Of course. Could you briefly tell me what the matter concerns? I’ll connect you with the right person.”',flow:['Understand the matter','Capture contact details','Route to the right person']},
+ {name:'Real estate',icon:Building2,question:'“Could I arrange a viewing?”',answer:'“Absolutely. Which property are you interested in? I’ll check the available viewing times.”',flow:['Identify the property','Check viewing times','Arrange the viewing']},
+ {name:'Clinics & appointments',icon:CalendarDays,question:'“Can I reschedule my appointment?”',answer:'“Of course. Can I confirm your name and current appointment? I’ll check the available times before changing anything.”',flow:['Verify the appointment','Check available times','Confirm the change']},
+ {name:'Enterprise & business support',icon:BriefcaseBusiness,question:'“Can I speak with someone about your services?”',answer:'“Absolutely. Is this about a new project or support for an existing account? I’ll get you to the right team.”',flow:['Understand the request','Capture key details','Route to the right team']},
 ];
 export function UseCases(){
  const [selected,setSelected]=useState(0);const active=industries[selected];

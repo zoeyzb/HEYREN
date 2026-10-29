@@ -3,15 +3,15 @@ import { ArrowUpRight, CalendarCheck2, Check, Headphones, Pause, Play, RotateCcw
 import { LiveVoiceAgent } from './LiveVoiceAgent';
 
 type Dialogue = { speaker: 'Heyrin' | 'Caller'; text: string; at: number };
-type Scenario = { id: string; title: string; kicker: string; subtitle: string; result: string; steps: string[]; dialogue: Dialogue[] };
+type Scenario = { id: string; title: string; kicker: string; subtitle: string; result: string; note?: string; steps: string[]; dialogue: Dialogue[] };
 const SCENARIOS: Scenario[] = [
-  { id: 'appointment', title: 'Appointment booking', kicker: '01 / SERVICE CALL', subtitle: 'A repair inquiry becomes a scheduled visit.', result: 'Appointment requested', steps: ['Intent identified', 'Preferred time collected', 'Booking request prepared'],
+  { id: 'appointment', title: 'Appointment booking', kicker: '01 / SERVICE CALL', subtitle: 'A repair inquiry moves toward a confirmed visit.', result: 'Appointment confirmed', note: '(when your calendar is connected)', steps: ['Service and time collected', 'Check calendar availability', 'Confirm and send details'],
     dialogue: [
       {speaker:'Heyrin', text:'Thanks for calling. How can I help today?', at:0},
       {speaker:'Caller', text:'My kitchen sink is leaking. Can someone come by this week?', at:1800},
       {speaker:'Heyrin', text:'I can help with that. Would Wednesday afternoon work?', at:3800},
       {speaker:'Caller', text:'Wednesday at two would be perfect.', at:6100},
-      {speaker:'Heyrin', text:'I have your preference. I’ll submit the appointment request for confirmation.', at:8200},
+      {speaker:'Heyrin', text:'Perfect. If your calendar is connected, I can book that time and send your confirmation. If not, I’ll pass the request to the team to confirm.', at:8200},
     ]},
   { id: 'qualify', title: 'Lead qualification', kicker: '02 / NEW OPPORTUNITY', subtitle: 'The right details, before a human handoff.', result: 'Lead details prepared', steps: ['Service identified', 'Project scope captured', 'Team handoff prepared'],
     dialogue: [
@@ -25,9 +25,9 @@ const SCENARIOS: Scenario[] = [
     dialogue: [
       {speaker:'Heyrin', text:'Hello, thanks for calling. What can I help you find?', at:0},
       {speaker:'Caller', text:'Do you offer maintenance for commercial buildings?', at:2100},
-      {speaker:'Heyrin', text:'In this example, yes. Are you looking for routine servicing?', at:4500},
+      {speaker:'Heyrin', text:'Yes, we can help with commercial maintenance. Is this routine servicing or is something in particular needing attention?', at:4500},
       {speaker:'Caller', text:'Yes, for a small office building.', at:6900},
-      {speaker:'Heyrin', text:'I can collect the details for a follow-up from the team.', at:9000},
+      {speaker:'Heyrin', text:'I can help with that. What’s the best way for our team to follow up with you?', at:9000},
     ]},
 ];
 const END_EXTRA = 2100;
@@ -109,7 +109,7 @@ export function VoiceDemo() {
           <div className="rin-mini-label">ILLUSTRATIVE OUTCOME</div>
           <CalendarCheck2 size={28} className="rin-lime"/>
           <h3>{selected.result}</h3>
-          <p>This preview shows the workflow Heyrin can support when the relevant systems are configured.</p>
+          <p>{selected.note || 'This preview shows the workflow Heyrin can support when the relevant systems are configured.'}</p>
           <div className="rin-outcome-steps">{selected.steps.map((step,i)=><div key={step} className={complete?'is-done':''}><span>{complete?<Check size={13}/>:String(i+1).padStart(2,'0')}</span>{step}</div>)}</div>
           <a href="#contact" className="rin-text-link">Explore your workflow <ArrowUpRight size={16}/></a>
         </aside>
