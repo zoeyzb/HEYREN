@@ -249,7 +249,12 @@ export function LiveVoiceAgent() {
           <h3>Talk to Heyrin. <em>Hear it respond.</em></h3>
           <p>Try a spoken customer inquiry or type one below. This is a guided preview, not a connected phone or calendar agent.</p>
         </div>
-        <span className={'rin-live-status' + (stage === 'listening' ? ' listening' : '')} role="status">{statusLabel}</span>
+        <span className={'rin-live-status' + (stage === 'listening' ? ' listening' : '')} role="status">
+          {statusLabel}
+          <span className={'rin-live-signal' + (stage === 'listening' || stage === 'speaking' ? ' is-active' : '')} aria-hidden="true">
+            <i /><i /><i /><i /><i />
+          </span>
+        </span>
       </div>
       <div className="rin-live-layout">
         <div className="rin-live-transcript" ref={transcriptRef} role="log" aria-label="Live preview conversation" aria-live="polite" aria-relevant="additions text">

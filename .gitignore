@@ -29,3 +29,6 @@ review/*part-*.jpg
 review/*.png
 
 review/*.log
+.vercel
+.env.local
+.env*.local
