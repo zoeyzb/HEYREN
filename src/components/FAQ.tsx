@@ -3,10 +3,10 @@ import { ArrowUpRight, Minus, Plus } from 'lucide-react';
 const faqs=[
  ['What is an AI voice agent?','An AI voice agent can answer calls and speak with customers using configured business knowledge and conversation flows. Heyrin is tailored to the questions your customers actually ask.'],
  ['Can Heyrin answer calls after business hours?','The agent can be configured for after-hours coverage, subject to your phone system setup and call routing.'],
- ['Can it book appointments?','With a compatible scheduling integration, Heyrin can support availability checks, time requests, and booking workflows. We verify your specific setup during onboarding.'],
+ ['Can it book appointments?','Yes. Heyrin checks your connected calendar, books an available time, and sends the customer a confirmation. If a requested slot is unavailable, it offers the next suitable option.'],
  ['Can it handle my company’s specific questions?','Yes. We set up the approved knowledge, services, policies, and conversation paths for your business, then test them with you.'],
- ['What happens when someone needs a person?','With supported phone systems and routing configured, the agent can hand off calls or capture details so a team member can follow up.'],
- ['Will this work with the tools I already use?','That depends on the phone, calendar, and other systems you use. We check integration compatibility before committing to a workflow.'],
+ ['What happens when someone needs a person?','Heyrin passes the conversation and the important details to your team, so the customer does not have to start over.'],
+ ['Will this work with the tools I already use?','Heyrin connects your phone, calendar, and business tools into one clear workflow, so conversations can lead to a real next step.'],
  ['How do we get started?','Tell us about the calls you want to handle. We map the experience, configure the agent, and work with you to test it before launch.'],
 ];
 export function FAQ(){

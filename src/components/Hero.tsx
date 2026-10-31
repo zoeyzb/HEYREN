@@ -7,6 +7,7 @@ const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default:
 export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
+  const [sceneFailed, setSceneFailed] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
 
@@ -52,11 +53,11 @@ export function Hero() {
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
       <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
-        <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
-          <img className="hero-static-preview-image" src="/heyrin-robot-instant.webp" alt="" width={864} height={900} fetchPriority="high" decoding="async" />
+        <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : sceneFailed ? 'is-fallback' : 'is-loading'}`} aria-hidden="true">
+          <img className="hero-static-preview-image" src="/heyrin-robot-instant.webp" alt="" width={864} height={900} decoding="async" />
         </div>
         <Suspense fallback={null}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
+          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneReady(true); setSceneFailed(false); }} onError={() => setSceneFailed(true)} />
         </Suspense>
       </div>
 

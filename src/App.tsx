@@ -1,9 +1,9 @@
 import { Navigation } from '@/components/Navigation';
 import { Hero } from '@/components/Hero';
 import { VoiceDemo } from '@/components/VoiceDemo';
+import { Reviews } from '@/components/Reviews';
 import { Capabilities } from '@/components/Capabilities';
 import { HowItWorks } from '@/components/HowItWorks';
-import { VoiceVisualization } from '@/components/VoiceVisualization';
 import { UseCases } from '@/components/UseCases';
 import { GetStarted } from '@/components/GetStarted';
 import { Contact } from '@/components/Contact';
@@ -22,11 +22,11 @@ function App() {
       {/* Sections */}
       <main>
         <Hero />
+        <HowItWorks />
         <VoiceDemo />
         <Capabilities />
-        <HowItWorks />
-        <VoiceVisualization />
         <UseCases />
+        <Reviews />
         <GetStarted />
         <Contact />
         <FAQ />

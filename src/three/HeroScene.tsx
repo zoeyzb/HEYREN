@@ -9,9 +9,10 @@ interface HeroSceneProps {
   activated?: boolean;
   active?: boolean;
   onReady?: () => void;
+  onError?: () => void;
 }
 
-export function HeroScene({ listening, speaking, active = true, onReady }: HeroSceneProps) {
+export function HeroScene({ listening, speaking, active = true, onReady, onError }: HeroSceneProps) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
   const [sceneReady, setSceneReady] = useState(false);
 
@@ -33,7 +34,7 @@ export function HeroScene({ listening, speaking, active = true, onReady }: HeroS
   return (
     <div className="hero-spline-stack" aria-label="Interactive Heyrin AI character">
       <div className="hero-spline-character">
-        <SplineRobot active={active} onReady={handleReady} />
+        <SplineRobot active={active} onReady={handleReady} onError={onError} />
       </div>
       {sceneReady && (
         <div className="hero-spline-atmosphere" aria-hidden="true">

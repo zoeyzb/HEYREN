@@ -3,16 +3,18 @@ import type { Application } from '@splinetool/runtime';
 
 const SCENE = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
 
-interface Props { active: boolean; onReady?: () => void; }
+interface Props { active: boolean; onReady?: () => void; onError?: () => void; }
 
 /** One owner for the rig: Spline renders the original asset without its authored
  * startup events; rotations below articulate it without translating joint anchors. */
-export function SplineRobot({ active, onReady }: Props) {
+export function SplineRobot({ active, onReady, onError }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
   const readyRef = useRef(onReady);
+  const errorRef = useRef(onError);
   activeRef.current = active;
   readyRef.current = onReady;
+  errorRef.current = onError;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,16 +38,18 @@ export function SplineRobot({ active, onReady }: Props) {
     window.addEventListener('blur', resetPointer);
 
     void (async () => {
-      const { Application } = await import('@splinetool/runtime');
+      // Start the runtime download and scene fetch together so neither blocks the other.
+      const runtimePromise = import('@splinetool/runtime');
+      const scenePromise = fetch(SCENE, { signal: abort.signal });
+      const [{ Application }, response] = await Promise.all([runtimePromise, scenePromise]);
       if (disposed) return;
       app = new Application(canvas, { renderOnDemand: false });
-      const response = await fetch(SCENE, { signal: abort.signal });
       if (!response.ok) throw new Error('Robot scene unavailable');
       const scene = await response.arrayBuffer();
       if (disposed) return;
       await app.start(scene, { interactive: false });
       if (disposed) return;
-      app.setZoom(0.78);
+      app.setZoom(0.58);
       const objects = app.getAllObjects();
       const camera = objects.find(object => object.name === 'Camera 2');
       if (camera) {
@@ -71,7 +75,7 @@ export function SplineRobot({ active, onReady }: Props) {
           Object.assign(object.rotation, { x: 0.28, y: 0.939, z: -0.666 });
         }
       }
-      const joints = objects.filter(object => ['Hand LEFT', 'arm', 'forearm'].includes(object.name) || (object.name === 'Hand' && (object as unknown as { type: string }).type === 'Mesh')).map(object => ({
+      const joints = objects.filter(object => ['Hand LEFT', 'arm', 'elbow', 'forearm'].includes(object.name) || (object.name === 'Hand' && (object as unknown as { type: string }).type === 'Mesh')).map(object => ({
         object, x: object.rotation.x, y: object.rotation.y, z: object.rotation.z,
       }));
       const head = objects.find(object => object.name === 'Head');
@@ -95,16 +99,19 @@ export function SplineRobot({ active, onReady }: Props) {
             const shoulder = object.name === 'Hand LEFT';
             const forearm = object.name === 'forearm';
             const wrist = object.name === 'Hand';
-            const sway = moving ? Math.sin(elapsed * 0.85 - (wrist ? 1.1 : forearm ? 0.65 : 0)) : 0;
-            const targetX = x + (shoulder ? 0 : sway * (wrist ? 0.025 : forearm ? 0.065 : 0.035));
-            const targetZ = z + (shoulder ? sway * 0.035 : 0);
+            const sway = moving ? Math.sin(elapsed * 1.02 - (wrist ? 1.1 : forearm ? 0.65 : 0)) : 0;
+            const elbow = object.name === 'elbow';
+            const upperArm = object.name === 'arm';
+            const targetX = x + (wrist ? sway * 0.19 : forearm ? sway * 0.34 : upperArm ? sway * 0.20 : 0);
+            const targetY = y + (elbow ? sway * 0.26 : 0);
+            const targetZ = z + (shoulder ? sway * 0.25 : upperArm ? sway * 0.16 : 0);
             object.rotation.x += (targetX - object.rotation.x) * blend;
-            object.rotation.y += (y - object.rotation.y) * blend;
+            object.rotation.y += (targetY - object.rotation.y) * blend;
             object.rotation.z += (targetZ - object.rotation.z) * blend;
           }
           if (head && headPose) {
-            head.rotation.y += (headPose.y + (moving ? pointerX * 0.12 : 0) - head.rotation.y) * blend;
-            head.rotation.x += (headPose.x + (moving ? pointerY * 0.05 : 0) - head.rotation.x) * blend;
+            head.rotation.y += (headPose.y + (moving ? pointerX * 0.40 : 0) - head.rotation.y) * blend;
+            head.rotation.x += (headPose.x + (moving ? pointerY * 0.22 : 0) - head.rotation.x) * blend;
           }
         }
         frame = requestAnimationFrame(animate);
@@ -116,7 +123,7 @@ export function SplineRobot({ active, onReady }: Props) {
       });
     })().catch(() => {
       // Keep the existing static preview visible if the scene cannot be loaded.
-      if (!disposed) app?.dispose();
+      if (!disposed) { app?.dispose(); errorRef.current?.(); }
     });
 
     return () => {

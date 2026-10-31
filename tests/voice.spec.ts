@@ -1,78 +1,57 @@
 import { expect, test } from '@playwright/test';
 
-test('voice preview: typed conversation and booking safeguards', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.locator('#voice-preview')).toBeVisible();
-  await expect(page.locator('#voice-preview')).toContainText('no real calls, bookings');
-  await page.getByRole('button', { name: 'Voice on' }).click();
-  await page.getByRole('textbox', { name: 'Or type a customer question' }).fill('I need to book an appointment');
-  await page.getByRole('button', { name: 'Send voice preview message' }).click();
-  await expect(page.getByRole('log', { name: 'Live preview conversation' })).toContainText('Which service');
-  await page.getByRole('textbox', { name: 'Or type a customer question' }).fill('Plumbing repair');
-  await page.getByRole('button', { name: 'Send voice preview message' }).click();
-  await expect(page.getByRole('log', { name: 'Live preview conversation' })).toContainText('What day or time');
-  await page.getByRole('textbox', { name: 'Or type a customer question' }).fill('Wednesday at two');
-  await page.getByRole('button', { name: 'Send voice preview message' }).click();
-  await expect(page.getByRole('log', { name: 'Live preview conversation' })).toContainText('no appointment has been booked');
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
-  await expect(page.getByRole('log', { name: 'Live preview conversation' }).locator('.rin-live-message')).toHaveCount(1);
-});
-
-test('voice preview: microphone recognition and an audible-reply control', async ({ page }) => {
+test('conversation showcase: scenarios switch and the scripted audio control works without a live agent', async ({ page }) => {
   await page.addInitScript(() => {
-    const FakeSpeechRecognition = class {
-      lang = '';
-      continuous = false;
-      interimResults = false;
+    class FakeUtterance {
+      text: string;
+      voice: SpeechSynthesisVoice | null = null;
+      lang = 'en-US';
+      rate = 1;
+      pitch = 1;
+      volume = 1;
       onstart: null | (() => void) = null;
       onend: null | (() => void) = null;
-      onresult: null | ((event: unknown) => void) = null;
-      onerror: null | ((event: unknown) => void) = null;
-      start() {
-        this.onstart?.();
-        setTimeout(() => {
-          this.onresult?.({ results: [{ isFinal: true, 0: { transcript: 'I want to book an appointment' } }] });
-        }, 100);
-      }
-      stop() { this.onend?.(); }
-      abort() { this.onend?.(); }
-    };
-    Object.defineProperty(window, 'SpeechRecognition', { configurable: true, value: FakeSpeechRecognition });
-  });
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Voice on' }).click();
-  await page.getByRole('button', { name: 'Start talking' }).click();
-  await expect(page.getByRole('log', { name: 'Live preview conversation' })).toContainText('I want to book an appointment');
-  await expect(page.getByRole('log', { name: 'Live preview conversation' })).toContainText('Which service');
-  await expect(page.getByRole('button', { name: 'Hear last reply' })).toBeEnabled();
-});
-
-test('voice preview: denied microphone permission has a usable text fallback', async ({ page }) => {
-  await page.addInitScript(() => {
-    class DeniedSpeechRecognition {
-      onstart: null | (() => void) = null;
-      onend: null | (() => void) = null;
-      onresult: null | ((event: unknown) => void) = null;
-      onerror: null | ((event: {error: string}) => void) = null;
-      start() { this.onerror?.({ error: 'not-allowed' }); this.onend?.(); }
-      stop() { this.onend?.(); }
-      abort() { this.onend?.(); }
+      onerror: null | (() => void) = null;
+      constructor(text: string) { this.text = text; }
     }
-    Object.defineProperty(window, 'SpeechRecognition', { configurable: true, value: DeniedSpeechRecognition });
+    const synth = {
+      cancel() {},
+      getVoices: () => [{ name: 'Samantha', lang: 'en-US' }, { name: 'Daniel', lang: 'en-GB' }],
+      speak(utterance: FakeUtterance) {
+        setTimeout(() => { utterance.onstart?.(); }, 20);
+      },
+    };
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: FakeUtterance });
+    Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: synth });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Start talking' }).click();
-  await expect(page.getByRole('alert')).toContainText('Microphone permission was denied');
-  await page.getByRole('textbox', { name: 'Or type a customer question' }).fill('What are your hours?');
-  await page.getByRole('button', { name: 'Send voice preview message' }).click();
-  await expect(page.getByRole('log', { name: 'Live preview conversation' })).toContainText('opening hours');
-  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.locator('#experience')).toBeVisible();
+  await expect(page.locator('.rin-live-agent')).toHaveCount(0);
+  await expect(page.locator('.rin-call-console')).toContainText('CONVERSATION PREVIEW');
+  await page.locator('.rin-scenario').filter({hasText:'Lead qualification'}).click();
+  await expect(page.locator('.rin-outcome h3')).toContainText('Lead details');
+  await expect(page.locator('.rin-transcript')).toContainText('Hey, this is Ren. How can I help?');
+  const audioRequest = page.waitForResponse(response => response.url().includes('/audio/qualify.mp3'));
+  await page.getByRole('button', { name: 'Listen to spoken demo' }).click();
+  expect((await audioRequest).ok()).toBeTruthy();
+  await expect(page.getByRole('button', { name: 'Stop spoken demo' })).toBeVisible();
+  await page.getByRole('button', { name: 'Stop spoken demo' }).click();
+  await expect(page.getByRole('button', { name: 'Listen to spoken demo' })).toBeVisible();
 });
 
-test('voice preview: mobile layout does not overflow and controls stay reachable', async ({ page }) => {
+test('all three one-time recordings are shipped as local audio files', async ({ request }) => {
+  for (const scenario of ['appointment', 'qualify', 'inquiry']) {
+    const response = await request.get(`/audio/${scenario}.mp3`);
+    expect(response.ok(), `${scenario} recording should be available`).toBeTruthy();
+    expect(response.headers()['content-type']).toContain('audio/mpeg');
+    expect(Number(response.headers()['content-length'])).toBeGreaterThan(200_000);
+  }
+});
+
+test('conversation showcase: mobile layout stays within the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Send voice preview message' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Listen to spoken demo' })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
