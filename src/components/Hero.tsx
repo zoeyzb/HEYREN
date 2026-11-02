@@ -92,7 +92,7 @@ export function Hero() {
           <div className="hero-eyebrow mb-7 flex items-center gap-3">
             <div className="h-px w-9 bg-lime/70" />
             <span className="text-[11px] font-mono uppercase tracking-[0.26em] text-lime/85">Introducing Heyrin</span>
-            <span className="hidden text-[11px] font-mono uppercase tracking-[0.18em] text-silver/45 sm:inline">Voice intelligence</span>
+            <span className="hidden text-[11px] font-mono uppercase tracking-[0.18em] text-silver/75 sm:inline">Voice intelligence</span>
           </div>
 
           <h1 className="hero-heading max-w-[700px] font-display text-[3.35rem] leading-[0.98] tracking-[-0.055em] text-soft sm:text-6xl lg:text-[5.35rem]">
@@ -127,7 +127,7 @@ export function Hero() {
             </button>
           </div>
 
-          <div className="hero-meta mt-10 flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.19em] text-silver/45">
+          <div className="hero-meta mt-10 flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.19em] text-silver/75">
             <span>Voice intelligence</span>
             <span className="h-1 w-1 rounded-full bg-lime/45" />
             <span>Business automation</span>
@@ -137,7 +137,7 @@ export function Hero() {
 
       <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
         <div className="h-12 w-px bg-gradient-to-b from-transparent via-lime/45 to-transparent animate-pulse-slow" />
-        <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-silver/40">Scroll</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-silver/70">Scroll</span>
       </div>
     </section>
   );

@@ -22,8 +22,8 @@ export default {
           glow: '#C49BFF',
         },
         silver: {
-          DEFAULT: '#929A96',
-          dim: '#5C6360',
+          DEFAULT: '#A9B1AD',
+          dim: '#7C847F',
           bright: '#C3CAC6',
         },
         soft: '#F6F7F4',
