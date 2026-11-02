@@ -8,6 +8,7 @@ export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
+  const [loadScene, setLoadScene] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
 
@@ -18,6 +19,31 @@ export function Hero() {
       setHeroState((prev) => (prev === 'idle' ? 'listening' : prev === 'listening' ? 'speaking' : 'idle'));
     }, 4200);
     return () => window.clearInterval(cycle);
+  }, []);
+
+  // Defer the heavy 3D scene (Spline runtime + physics wasm, several MB) until the page has painted and gone idle,
+  // and skip it entirely on data-saver / slow connections / low-memory devices. The static poster stays visible.
+  useEffect(() => {
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string }; deviceMemory?: number };
+    const slow = nav.connection?.saveData || /(^|-)2g|3g/.test(nav.connection?.effectiveType ?? '') || (nav.deviceMemory !== undefined && nav.deviceMemory <= 2);
+    if (slow) return;
+    let cancelled = false;
+    let idleHandle: number | undefined;
+    let timeoutHandle: number | undefined;
+    const start = () => {
+      if (cancelled) return;
+      const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
+      if (w.requestIdleCallback) idleHandle = w.requestIdleCallback(() => !cancelled && setLoadScene(true), { timeout: 1500 });
+      else timeoutHandle = window.setTimeout(() => !cancelled && setLoadScene(true), 600);
+    };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', start);
+      if (idleHandle !== undefined) (window as Window & { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback?.(idleHandle);
+      if (timeoutHandle !== undefined) window.clearTimeout(timeoutHandle);
+    };
   }, []);
 
   useEffect(() => {
@@ -56,9 +82,9 @@ export function Hero() {
         <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
           <img className="hero-static-preview-image" src="/hero-spline-preview.webp" alt="" />
         </div>
-        <Suspense fallback={null}>
+        {loadScene && <Suspense fallback={null}>
           <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
-        </Suspense>
+        </Suspense>}
       </div>
 
       <div className="hero-content relative z-10 mx-auto flex min-h-screen max-w-[1440px] items-center px-6 pb-16 pt-28 sm:px-10 lg:px-14 xl:px-20">
