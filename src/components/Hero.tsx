@@ -9,6 +9,7 @@ export function Hero() {
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneFailed, setSceneFailed] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
+  const [loadScene, setLoadScene] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -18,6 +19,36 @@ export function Hero() {
       setHeroState((prev) => (prev === 'idle' ? 'listening' : prev === 'listening' ? 'speaking' : 'idle'));
     }, 4200);
     return () => window.clearInterval(cycle);
+  }, []);
+
+  // Keep the first load light: the robot poster paints instantly, and the heavy live 3D scene (several MB of Spline
+  // runtime + scene) only starts after the page has finished loading and the browser is idle. Skipped on phones,
+  // data-saver and slow connections, where the poster stays.
+  useEffect(() => {
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string }; deviceMemory?: number };
+    const isPhone = window.matchMedia('(max-width: 767px)').matches;
+    const slow = nav.connection?.saveData || /(^|-)2g|3g/.test(nav.connection?.effectiveType ?? '') || (nav.deviceMemory !== undefined && nav.deviceMemory <= 2);
+    if (isPhone || slow) return;
+    let cancelled = false;
+    let handle: number | undefined;
+    const go = () => {
+      if (cancelled) return;
+      const preconnect = document.createElement('link');
+      preconnect.rel = 'preconnect';
+      preconnect.href = 'https://prod.spline.design';
+      preconnect.crossOrigin = '';
+      document.head.appendChild(preconnect);
+      const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
+      if (w.requestIdleCallback) handle = w.requestIdleCallback(() => !cancelled && setLoadScene(true), { timeout: 1200 });
+      else handle = window.setTimeout(() => !cancelled && setLoadScene(true), 500);
+    };
+    if (document.readyState === 'complete') go();
+    else window.addEventListener('load', go, { once: true });
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', go);
+      if (handle !== undefined) { (window as Window & { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback?.(handle); window.clearTimeout(handle); }
+    };
   }, []);
 
   useEffect(() => {
@@ -54,11 +85,14 @@ export function Hero() {
 
       <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
         <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : sceneFailed ? 'is-fallback' : 'is-loading'}`} aria-hidden="true">
-          <img className="hero-static-preview-image" src="/heyrin-robot-instant.webp" alt="" width={864} height={900} decoding="async" />
+          <picture>
+            <source media="(max-width: 767px)" srcSet="/heyrin-robot-instant-sm.webp" type="image/webp" />
+            <img className="hero-static-preview-image" src="/heyrin-robot-instant.webp" alt="" width={864} height={900} decoding="async" />
+          </picture>
         </div>
-        <Suspense fallback={null}>
+        {loadScene && <Suspense fallback={null}>
           <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneReady(true); setSceneFailed(false); }} onError={() => setSceneFailed(true)} />
-        </Suspense>
+        </Suspense>}
       </div>
 
       <div className="hero-content relative z-10 mx-auto flex min-h-screen max-w-[1440px] items-center px-6 pb-16 pt-28 sm:px-10 lg:px-14 xl:px-20">
