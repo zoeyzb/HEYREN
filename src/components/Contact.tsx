@@ -22,6 +22,8 @@ const EMPTY: FormData = {
   honeypot: '',
 };
 
+const CONTACT_EMAIL = 'sierra@recoverrevenue.company';
+
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export function Contact() {
@@ -29,7 +31,6 @@ export function Contact() {
   const [data, setData] = useState<FormData>(EMPTY);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [emailConfigured, setEmailConfigured] = useState(true);
 
   const update = (field: keyof FormData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -58,34 +59,29 @@ export function Contact() {
     setStatus('loading');
     setErrorMsg('');
 
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/contact-inquiry`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setStatus('error');
-        setErrorMsg(result.error || 'Submission failed. Please try again.');
-        return;
-      }
-
+    // Spam trap: bots fill the hidden field; pretend success and do nothing.
+    if (data.honeypot) {
       setStatus('success');
-      setEmailConfigured(result.emailConfigured !== false);
       setData(EMPTY);
-    } catch {
-      setStatus('error');
-      setErrorMsg('Network error. Please try again or email us directly.');
+      return;
     }
+
+    // No backend needed: open the visitor's email app with the inquiry pre-filled.
+    const lines = [
+      `Name: ${data.name.trim()}`,
+      `Email: ${data.email.trim()}`,
+      data.company.trim() ? `Company: ${data.company.trim()}` : null,
+      data.phone.trim() ? `Phone: ${data.phone.trim()}` : null,
+      data.website.trim() ? `Website: ${data.website.trim()}` : null,
+      '',
+      data.message.trim(),
+    ];
+    const body = lines.filter((l): l is string => l !== null).join('\n');
+    const subject = `Heyrin inquiry from ${data.name.trim()}`;
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    setStatus('success');
+    setData(EMPTY);
   };
 
   useEffect(() => {
@@ -146,17 +142,10 @@ export function Contact() {
                   <div className="w-14 h-14 rounded-full bg-lime/10 border border-lime/30 flex items-center justify-center mx-auto mb-4">
                     <CheckCircle2 size={24} className="text-lime" />
                   </div>
-                  <h3 className="text-lg font-medium text-soft mb-2">Inquiry received.</h3>
+                  <h3 className="text-lg font-medium text-soft mb-2">Almost there.</h3>
                   <p className="text-sm text-silver/70 max-w-xs mx-auto">
-                    {emailConfigured
-                      ? "Your message has been sent. We'll be in touch soon."
-                      : "Your inquiry has been recorded. We'll be in touch soon."}
+                    Your email app should open with your inquiry ready to send. Just press send and we'll be in touch soon.
                   </p>
-                  {!emailConfigured && (
-                    <p className="text-[10px] font-mono text-silver/40 mt-4">
-                      Email delivery is being configured — your inquiry is safely stored.
-                    </p>
-                  )}
                   <button
                     onClick={() => setStatus('idle')}
                     className="mt-6 text-xs text-silver/50 hover:text-silver transition-colors"
