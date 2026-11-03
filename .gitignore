@@ -21,3 +21,14 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Local browser verification outputs (reviewed WebP images are tracked)
+test-results/
+review/playwright-report/
+review/*part-*.jpg
+review/*.png
+
+review/*.log
+.vercel
+.env.local
+.env*.local

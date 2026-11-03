@@ -7,10 +7,9 @@ const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default:
 export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
+  const [sceneFailed, setSceneFailed] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
-  const [loadScene, setLoadScene] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
-  const sceneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -19,31 +18,6 @@ export function Hero() {
       setHeroState((prev) => (prev === 'idle' ? 'listening' : prev === 'listening' ? 'speaking' : 'idle'));
     }, 4200);
     return () => window.clearInterval(cycle);
-  }, []);
-
-  // Defer the heavy 3D scene (Spline runtime + physics wasm, several MB) until the page has painted and gone idle,
-  // and skip it entirely on data-saver / slow connections / low-memory devices. The static poster stays visible.
-  useEffect(() => {
-    const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string }; deviceMemory?: number };
-    const slow = nav.connection?.saveData || /(^|-)2g|3g/.test(nav.connection?.effectiveType ?? '') || (nav.deviceMemory !== undefined && nav.deviceMemory <= 2);
-    if (slow) return;
-    let cancelled = false;
-    let idleHandle: number | undefined;
-    let timeoutHandle: number | undefined;
-    const start = () => {
-      if (cancelled) return;
-      const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
-      if (w.requestIdleCallback) idleHandle = w.requestIdleCallback(() => !cancelled && setLoadScene(true), { timeout: 1500 });
-      else timeoutHandle = window.setTimeout(() => !cancelled && setLoadScene(true), 600);
-    };
-    if (document.readyState === 'complete') start();
-    else window.addEventListener('load', start, { once: true });
-    return () => {
-      cancelled = true;
-      window.removeEventListener('load', start);
-      if (idleHandle !== undefined) (window as Window & { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback?.(idleHandle);
-      if (timeoutHandle !== undefined) window.clearTimeout(timeoutHandle);
-    };
   }, []);
 
   useEffect(() => {
@@ -62,7 +36,7 @@ export function Hero() {
         .fromTo('.hero-copy', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, '-=0.52')
         .fromTo('.hero-actions', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.65 }, '-=0.4')
         .fromTo('.hero-meta', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55 }, '-=0.3');
-      gsap.fromTo(sceneRef.current, { opacity: 0, x: 56, scale: 0.92 }, { opacity: 1, x: 0, scale: 1, duration: 1.35, delay: 0.15, ease: 'power4.out' });
+      // Keep the robot layer visible from the first paint; only animate ambient glow.
       gsap.to('.hero-orbit-glow', { scale: 1.08, opacity: 0.72, duration: 3.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
     }, heroRef);
     return () => context.revert();
@@ -78,13 +52,13 @@ export function Hero() {
       <div className="absolute -left-32 top-[24%] h-[34rem] w-[34rem] rounded-full bg-lime/5 blur-[130px] pointer-events-none" />
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
-      <div ref={sceneRef} className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
-        <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : ''}`} aria-hidden="true">
-          <img className="hero-static-preview-image" src="/hero-spline-preview.webp" alt="" />
+      <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
+        <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : sceneFailed ? 'is-fallback' : 'is-loading'}`} aria-hidden="true">
+          <img className="hero-static-preview-image" src="/heyrin-robot-instant.webp" alt="" width={864} height={900} decoding="async" />
         </div>
-        {loadScene && <Suspense fallback={null}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => setSceneReady(true)} />
-        </Suspense>}
+        <Suspense fallback={null}>
+          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneReady(true); setSceneFailed(false); }} onError={() => setSceneFailed(true)} />
+        </Suspense>
       </div>
 
       <div className="hero-content relative z-10 mx-auto flex min-h-screen max-w-[1440px] items-center px-6 pb-16 pt-28 sm:px-10 lg:px-14 xl:px-20">
@@ -92,16 +66,14 @@ export function Hero() {
           <div className="hero-eyebrow mb-7 flex items-center gap-3">
             <div className="h-px w-9 bg-lime/70" />
             <span className="text-[11px] font-mono uppercase tracking-[0.26em] text-lime/85">Introducing Heyrin</span>
-            <span className="hidden text-[11px] font-mono uppercase tracking-[0.18em] text-silver/75 sm:inline">Voice intelligence</span>
+            <span className="hidden text-[11px] font-mono uppercase tracking-[0.18em] text-silver/45 sm:inline">Voice intelligence</span>
           </div>
 
-          <h1 className="hero-heading max-w-[700px] font-display text-[3.35rem] leading-[0.98] tracking-[-0.055em] text-soft sm:text-6xl lg:text-[5.35rem]">
-            Meet the voice
-            <br />
-            <span className="text-soft">behind your</span>
+          <h1 className="hero-heading max-w-[700px] font-display text-[3.35rem] leading-[0.98] tracking-[-0.055em] text-soft sm:text-6xl lg:text-[5.1rem]">
+            Never miss
             <br />
             <span className="hero-heading-accent relative inline-block text-lime text-glow-lime">
-              business.
+              another call.
               <span className="absolute -bottom-3 left-0 h-px w-[88%] bg-gradient-to-r from-lime/80 via-lime/30 to-transparent" />
             </span>
           </h1>
@@ -112,7 +84,7 @@ export function Hero() {
               <span className="text-violet-glow">Always ready.</span>
             </p>
             <p className="mt-4 max-w-[500px] text-[15px] leading-7 text-silver sm:text-base">
-              An intelligent AI voice agent that answers calls, handles inquiries, and helps turn every conversation into an opportunity.
+              An AI voice agent that answers every call, handles routine questions, and helps turn more conversations into customers.
             </p>
           </div>
 
@@ -127,7 +99,7 @@ export function Hero() {
             </button>
           </div>
 
-          <div className="hero-meta mt-10 flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.19em] text-silver/75">
+          <div className="hero-meta mt-10 flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.19em] text-silver/45">
             <span>Voice intelligence</span>
             <span className="h-1 w-1 rounded-full bg-lime/45" />
             <span>Business automation</span>
@@ -137,7 +109,7 @@ export function Hero() {
 
       <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
         <div className="h-12 w-px bg-gradient-to-b from-transparent via-lime/45 to-transparent animate-pulse-slow" />
-        <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-silver/70">Scroll</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-silver/40">Scroll</span>
       </div>
     </section>
   );

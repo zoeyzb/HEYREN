@@ -3,9 +3,9 @@ import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
   { label: 'Home', href: '#home' },
+  { label: 'How It Works', href: '#how-it-works' },
   { label: 'Experience', href: '#experience' },
   { label: 'Capabilities', href: '#capabilities' },
-  { label: 'How It Works', href: '#how-it-works' },
   { label: 'Contact', href: '#contact' },
 ];
 

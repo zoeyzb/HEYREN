@@ -1,78 +1,32 @@
-import { lazy, Suspense } from 'react';
-import { useFadeUp } from '@/hooks/useReveal';
-
-const VoiceOrbScene = lazy(() => import('@/three/VoiceOrbScene').then(m => ({ default: m.VoiceOrbScene })));
-
-export function VoiceVisualization() {
-  const { ref, visible } = useFadeUp<HTMLDivElement>();
-
-  return (
-    <section className="relative py-24 lg:py-36 bg-ink-base overflow-hidden">
-      <div className="absolute inset-0 tech-grid opacity-15" />
-      {/* Ambient glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-lime/4 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-violet/4 rounded-full blur-[120px] pointer-events-none" />
-
-      <div ref={ref} className={`relative max-w-[900px] mx-auto px-6 text-center fade-up ${visible ? 'visible' : ''}`}>
-        {/* Label */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-6 h-px bg-violet/60" />
-          <span className="text-xs font-mono tracking-[0.2em] text-violet/80 uppercase">Voice Intelligence Lab</span>
-          <div className="w-6 h-px bg-violet/60" />
-        </div>
-
-        {/* Heading */}
-        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-soft tracking-tight mb-4">
-          Intelligence you can hear.
-        </h2>
-        <p className="text-sm text-silver/70 max-w-md mx-auto mb-12">
-          A luminous representation of voice processing — frequency, intent, and meaning flowing through the core.
-        </p>
-
-        {/* 3D Orb */}
-        <div className="relative w-full h-[400px] lg:h-[480px] mb-12">
-          <Suspense
-            fallback={
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full border border-lime/20 animate-pulse" />
-              </div>
-            }
-          >
-            <VoiceOrbScene />
-          </Suspense>
-
-          {/* Frequency bands overlay */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-end gap-1 h-12 pointer-events-none">
-            {Array.from({ length: 50 }).map((_, i) => (
-              <span
-                key={i}
-                className="wave-bar"
-                style={{
-                  animationDelay: `${i * 0.04}s`,
-                  animationDuration: `${1 + (i % 3) * 0.3}s`,
-                  color: i % 5 === 0 ? '#A16BFF' : '#B9FF32',
-                  opacity: 0.3,
-                  height: '100%',
-                }}
-              />
-            ))}
+import { useEffect, useState } from 'react';
+import { AudioLines, BrainCircuit, MessageSquareText, ArrowRight, ChevronRight } from 'lucide-react';
+const modes=[
+ {id:'listening',name:'Listening',subtitle:'The human signal.',description:'A caller explains what they need. The conversation begins with their words.',tags:['VOICE INPUT','TURN DETECTION'],phrase:'“I need to move my appointment…”'},
+ {id:'understanding',name:'Understanding',subtitle:'The moment of clarity.',description:'Relevant intent and details are brought into focus before the next response.',tags:['INTENT: RESCHEDULE','CONTEXT: EXISTING BOOKING'],phrase:'Change existing appointment'},
+ {id:'responding',name:'Responding',subtitle:'A useful answer.',description:'The agent follows your configured knowledge and workflow to move the conversation forward.',tags:['RESPONSE READY','NEXT STEP: TIME PREFERENCE'],phrase:'“Of course. What day works better?”'},
+];
+const icons=[AudioLines,BrainCircuit,MessageSquareText];
+export function VoiceVisualization(){
+ const [selected,setSelected]=useState(0);const [auto,setAuto]=useState(false);
+ useEffect(()=>{if(!auto)return;const id=setInterval(()=>setSelected(n=>(n+1)%3),4000);return()=>clearInterval(id)},[auto]);
+ const mode=modes[selected];const Icon=icons[selected];
+ return <section id="intelligence" className="rin-section rin-intelligence">
+    <div className="rin-container">
+      <div className="rin-overline"><span>04 / VOICE INTELLIGENCE</span><span>A CLOSER LOOK</span></div>
+      <div className="rin-heading-row"><h2>Not just a voice.<br/><em>A chain of understanding.</em></h2><p>Three connected moments. Select a phase to explore what an intelligent voice interaction is designed to do.</p></div>
+      <div className="rin-intelligence-shell">
+        <div className="rin-intel-tabs" role="tablist" aria-label="Voice intelligence stages">{modes.map((stage,i)=>{const StageIcon=icons[i];return <button type="button" key={stage.id} role="tab" aria-selected={selected===i} className={selected===i?'is-selected':''} onClick={()=>{setSelected(i);setAuto(false)}}><span>0{i+1}</span><StageIcon size={19}/><strong>{stage.name}</strong><ChevronRight size={15}/></button>})}</div>
+        <div className="rin-intel-art" role="tabpanel" aria-label={mode.name}>
+          <div className={`rin-intel-sphere mode-${mode.id}`} aria-hidden="true">
+            <div className="rin-intel-orbit orbit-a"/><div className="rin-intel-orbit orbit-b"/><div className="rin-intel-orbit orbit-c"/>
+            <div className="rin-intel-nucleus"><Icon size={56} strokeWidth={1.2}/></div>
+            {Array.from({length:18},(_,i)=><span key={i} className="rin-intel-ray" style={{transform:`rotate(${i*20}deg)`}}/>)}
           </div>
+          <div className="rin-intel-display"><div className="rin-mini-label">SELECTED PHASE / {mode.name.toUpperCase()}</div><p>{mode.phrase}</p><div>{mode.tags.map(t=><span key={t}>{t}</span>)}</div></div>
         </div>
-
-        {/* Technical readout */}
-        <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-          {[
-            { label: 'FREQUENCY', value: '140 Hz' },
-            { label: 'INTENT', value: '97.3%' },
-            { label: 'LATENCY', value: '0.4s' },
-          ].map((item) => (
-            <div key={item.label} className="text-center">
-              <div className="text-[9px] font-mono tracking-[0.15em] text-silver/40 uppercase mb-1">{item.label}</div>
-              <div className="text-sm font-mono text-soft">{item.value}</div>
-            </div>
-          ))}
-        </div>
+        <div className="rin-intel-description"><div className="rin-mini-label">SYSTEM STATE 0{selected+1}</div><h3>{mode.subtitle}</h3><p>{mode.description}</p><button type="button" onClick={()=>setSelected(s=>(s+1)%3)} className="rin-text-link">Next phase <ArrowRight size={16}/></button><button type="button" aria-pressed={auto} onClick={()=>setAuto(p=>!p)} className="rin-intel-autoplay">{auto?'Stop cycle':'Auto cycle states'}</button></div>
       </div>
-    </section>
-  );
+      <p className="rin-intel-caption">Conceptual visualization of a voice interaction; not a live processing monitor.</p>
+    </div>
+ </section>;
 }

@@ -1,114 +1,92 @@
-/* ===== Visual polish layer (desktop + mobile) ===== */
+/* ===== HEYRIN visual polish layer (laptop + phone) — additive, no layout changes to the hero or the .rin-* sections ===== */
 html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
-body { background: #050607; overflow-x: hidden; }
+body { overflow-x: hidden; }
 ::selection { background: rgba(185, 255, 50, 0.28); color: #fff; }
-:focus-visible { outline: 2px solid #B9FF32; outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 2px solid #B9FF32; outline-offset: 3px; }
 
-/* Slim branded scrollbar (desktop) */
 @media (hover: hover) {
   * { scrollbar-width: thin; scrollbar-color: rgba(185, 255, 50, 0.35) #050607; }
-  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: #050607; }
   ::-webkit-scrollbar-thumb { background: linear-gradient(#B9FF32aa, #A16BFFaa); border-radius: 8px; }
 }
 
-/* Scroll progress line (progressive enhancement) */
+/* Scroll progress line */
 @keyframes heyrinProgress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @supports (animation-timeline: scroll()) {
   body::before {
-    content: ''; position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10000;
+    content: ''; position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10000; pointer-events: none;
     transform-origin: 0 50%; background: linear-gradient(90deg, #B9FF32, #A16BFF);
     box-shadow: 0 0 14px rgba(185, 255, 50, 0.55);
     animation: heyrinProgress linear both; animation-timeline: scroll(root);
   }
 }
 
-/* Typography: headlines + legibility of tiny labels */
-.font-display { font-family: 'Clash Display', 'Inter', system-ui, sans-serif; font-weight: 600; letter-spacing: -0.035em; }
-.wordmark { font-family: 'Clash Display', 'Inter', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
-.text-\[9px\] { font-size: 0.6875rem !important; line-height: 1.35 !important; }
-.text-\[10px\] { font-size: 0.72rem !important; line-height: 1.4 !important; }
-.text-\[11px\] { font-size: 0.75rem !important; }
-.text-silver\/30, .text-silver\/35, .text-silver\/40, .text-silver\/45, .text-silver\/50 { color: rgba(178, 186, 182, 0.7) !important; }
+/* ---- Legibility: lift dim greys + tiny labels ---- */
+.text-silver\/30, .text-silver\/35, .text-silver\/40, .text-silver\/45, .text-silver\/50 { color: rgba(178, 186, 182, 0.72) !important; }
 .text-silver\/60, .text-silver\/70 { color: rgba(196, 204, 200, 0.86) !important; }
-p.text-xs { font-size: 0.8125rem; line-height: 1.7; }
+.rin-overline span:last-child, .rin-muted { color: #9aa49f; }
+.rin-mini-label, .rin-mono { color: #b4bab7; font-size: 11px; }
+.rin-scenario .rin-mini-label { color: #9aa49f; font-size: 10px; }
+.rin-scenario > span:nth-child(3) { color: #a7b1ab; }
+.rin-capability-lower .rin-capability-choice > span { color: #98a49b; }
+.rin-review-card p, .rin-review-card-top .rin-mini-label { color: #a9b6aa; font-size: 11px; }
 
-/* Section atmosphere + hairline dividers */
-main > section:not(#home) { isolation: isolate; }
-main > section:not(#home)::after {
+/* ---- Section atmosphere + hairline dividers ---- */
+.rin-section::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
   background:
-    radial-gradient(55% 38% at 12% 0%, rgba(185, 255, 50, 0.055), transparent 70%),
-    radial-gradient(48% 40% at 92% 100%, rgba(161, 107, 255, 0.08), transparent 70%);
+    radial-gradient(52% 36% at 10% 0%, rgba(185, 255, 50, 0.05), transparent 70%),
+    radial-gradient(46% 38% at 94% 100%, rgba(161, 107, 255, 0.075), transparent 70%);
 }
-main > section + section::before {
+.rin-section + .rin-section::before {
   content: ''; position: absolute; top: 0; left: 50%; width: min(760px, 82%); height: 1px; z-index: 1;
   transform: translateX(-50%); pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(185, 255, 50, 0.4), rgba(161, 107, 255, 0.4), transparent);
 }
 
-/* Glass cards with soft lift + lime rim on hover */
-[class*="rounded-xl"][class*="border-ink-line"], [class*="rounded-2xl"][class*="border-ink-line"] {
-  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012) 42%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 22px 44px -28px rgba(0, 0, 0, 0.85);
-  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.4s, box-shadow 0.5s, background-color 0.5s;
-}
+/* ---- Interactions: softer, richer hovers ---- */
+.rin-scenario, .rin-capability-choice, .rin-start-step, .rin-faq-item { transition: background .35s ease, border-color .35s ease, transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease; }
 @media (hover: hover) {
-  [class*="rounded-xl"][class*="border-ink-line"]:hover, [class*="rounded-2xl"][class*="border-ink-line"]:hover {
-    transform: translateY(-4px);
-    box-shadow: inset 0 1px 0 rgba(185, 255, 50, 0.2), 0 26px 52px -24px rgba(185, 255, 50, 0.22), 0 0 0 1px rgba(185, 255, 50, 0.08);
-  }
+  .rin-capability-lower .rin-capability-choice:hover { border-color: #b9ff3266; transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgba(185, 255, 50, 0.35); }
+  .rin-review-card:hover { box-shadow: 0 26px 52px -24px rgba(185, 255, 50, 0.25), inset 0 1px 0 rgba(185, 255, 50, 0.18) !important; }
 }
-
-/* Buttons: shine sweep */
-.magnetic-btn { position: relative; overflow: hidden; }
-.magnetic-btn::after {
-  content: ''; position: absolute; inset: 0; transform: translateX(-120%);
-  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.38) 50%, transparent 70%);
-  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); pointer-events: none;
+.magnetic-btn, .rin-button { position: relative; overflow: hidden; }
+.magnetic-btn::after, .rin-button::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-120%); pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.34) 50%, transparent 70%);
+  transition: transform .8s cubic-bezier(.2,.7,.2,1);
 }
-.magnetic-btn:hover::after { transform: translateX(120%); }
+.magnetic-btn:hover::after, .rin-button:hover::after { transform: translateX(120%); }
 
-/* ===== Hero ===== */
+/* ---- Hero: glowing halo + orbit ring so the robot's side is never empty while the 3D scene loads ---- */
 @keyframes heyrinRing { from { transform: translate(-50%, -50%) rotate(-14deg); } to { transform: translate(-50%, -50%) rotate(346deg); } }
-@keyframes heyrinBreathe { 0%, 100% { opacity: 0.75; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); } }
-@keyframes heyrinFloat { 0%, 100% { transform: translateY(1%) scale(1.04); } 50% { transform: translateY(-2.5%) scale(1.04); } }
-
-/* Placeholder halo + orbit ring: fills the empty right side until the live 3D robot fades in (desktop) and stays on phones */
-.hero-static-preview::before {
-  content: ''; position: absolute; left: 50%; top: 50%; width: min(86%, 560px); aspect-ratio: 1; border-radius: 50%;
-  transform: translate(-50%, -50%); z-index: -1; pointer-events: none;
-  background: radial-gradient(circle, rgba(161, 107, 255, 0.2), rgba(185, 255, 50, 0.07) 46%, transparent 70%);
+@keyframes heyrinBreathe { 0%, 100% { opacity: .75; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); } }
+@keyframes heyrinFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -2.2%; } }
+.hero-scene::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: min(78%, 560px); aspect-ratio: 1; border-radius: 50%;
+  transform: translate(-50%, -50%); z-index: 0; pointer-events: none; transition: opacity .6s ease;
+  background: radial-gradient(circle, rgba(161, 107, 255, .2), rgba(185, 255, 50, .07) 46%, transparent 70%);
   filter: blur(14px); animation: heyrinBreathe 5s ease-in-out infinite;
 }
-.hero-static-preview::after {
-  content: ''; position: absolute; left: 50%; top: 50%; width: min(104%, 700px); height: 40%; border-radius: 50%;
-  border: 1px solid rgba(185, 255, 50, 0.3); box-shadow: 0 0 24px rgba(185, 255, 50, 0.12), inset 0 0 24px rgba(161, 107, 255, 0.1);
-  transform: translate(-50%, -50%) rotate(-14deg); pointer-events: none; animation: heyrinRing 40s linear infinite;
+.hero-scene::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: min(96%, 700px); height: 38%; border-radius: 50%; z-index: 0;
+  border: 1px solid rgba(185, 255, 50, .28); box-shadow: 0 0 24px rgba(185, 255, 50, .1), inset 0 0 24px rgba(161, 107, 255, .1);
+  transform: translate(-50%, -50%) rotate(-14deg); pointer-events: none; transition: opacity .6s ease; animation: heyrinRing 40s linear infinite;
 }
+.hero-scene.is-ready::before, .hero-scene.is-ready::after { opacity: 0; }
 @media (max-width: 767px) {
+  .hero-scene.is-ready::before, .hero-scene.is-ready::after { opacity: 1; } /* phones keep the static robot, so keep its halo too */
+  .hero-static-preview-image { animation: heyrinFloat 6.5s ease-in-out infinite; filter: drop-shadow(0 0 26px rgba(185,255,50,.2)) drop-shadow(0 0 70px rgba(161,107,255,.3)); }
   .noise-overlay { display: none; }
-  .hero-static-preview-image {
-    animation: heyrinFloat 6.5s ease-in-out infinite;
-    filter: drop-shadow(0 0 26px rgba(185, 255, 50, 0.2)) drop-shadow(0 0 70px rgba(161, 107, 255, 0.3));
-  }
-  .hero-static-preview::after { width: 118%; height: 30%; }
-  main > section:not(#home) { padding-top: 4.5rem !important; padding-bottom: 4.5rem !important; }
-  h2.font-display { font-size: clamp(1.8rem, 8.4vw, 2.4rem) !important; line-height: 1.08 !important; }
-  .magnetic-btn, nav button { min-height: 44px; }
-  .hero-heading { font-size: clamp(2.9rem, 14.5vw, 3.6rem) !important; }
-
-  /* Mobile hero: robot takes centre stage above the headline instead of hiding behind the buttons */
-  .hero-shell { min-height: auto !important; }
-  .hero-scene { top: 3.5rem !important; bottom: auto !important; left: 0 !important; right: 0 !important; width: 100% !important; min-width: 0 !important; height: 21.5rem !important; opacity: 1 !important;
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 80%, transparent 100%) !important; mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 80%, transparent 100%) !important; }
-  .hero-static-preview-image { height: 96% !important; max-width: 100% !important; }
-  .hero-content { padding-top: 21.5rem !important; padding-bottom: 4.5rem !important; align-items: flex-start !important; }
-  .hero-meta { margin-top: 2.25rem !important; }
-  .hero-vignette { background: linear-gradient(180deg, rgba(5,6,7,0) 0%, rgba(5,6,7,0) 45%, rgba(5,6,7,.55) 62%, #050607 100%) !important; }
-  .hero-orbit-glow { top: 2rem !important; right: -25% !important; height: 22rem !important; width: 22rem !important; }
+  .rin-overline, .rin-final-overline { font-size: 10px !important; letter-spacing: .08em !important; }
+  .magnetic-btn, .rin-button, .rin-unified-tabs button, .rin-capability-choice, .rin-scenario { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-static-preview::before, .hero-static-preview::after, .hero-static-preview-image { animation: none !important; }
+  .hero-scene::before, .hero-scene::after, .hero-static-preview-image { animation: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* Tiny utility-sized labels: keep them readable */
+.text-\[9px\] { font-size: 0.6875rem !important; line-height: 1.35 !important; }
+.text-\[10px\] { font-size: 0.72rem !important; line-height: 1.4 !important; }
