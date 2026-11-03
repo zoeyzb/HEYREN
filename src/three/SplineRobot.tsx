@@ -57,27 +57,21 @@ export function SplineRobot({ active, onReady, onError }: Props) {
         camera.position.z = 1000;
         camera.rotation.x = 0.006996317664543058;
       }
-      // Connected relaxed pose measured from this scene's initial rig, applied
-      // once before reveal. Never translate elbow/forearm anchors during motion.
-      for (const object of objects) {
-        if (object.name === 'Head') Object.assign(object.rotation, { x: 0, y: 0, z: 0 });
-        if (object.name === 'Hand LEFT') object.rotation.z = 0.086;
-        if (object.name === 'arm') object.rotation.x = 0;
-        if (object.name === 'elbow') {
-          Object.assign(object.position, { x: 20.542, y: -85.632, z: 2.657 });
-          object.rotation.y = -0.142;
-        }
-        if (object.name === 'forearm') {
-          Object.assign(object.position, { x: -4.79, y: -12.261, z: 1.36 });
-          object.rotation.x = 0.324;
-        }
-        if (object.name === 'Hand' && (object as unknown as { type: string }).type === 'Mesh') {
-          Object.assign(object.rotation, { x: 0.28, y: 0.939, z: -0.666 });
-        }
-      }
-      const joints = objects.filter(object => ['Hand LEFT', 'arm', 'elbow', 'forearm'].includes(object.name) || (object.name === 'Hand' && (object as unknown as { type: string }).type === 'Mesh')).map(object => ({
-        object, x: object.rotation.x, y: object.rotation.y, z: object.rotation.z,
-      }));
+      // Rest pose: the forearm armor panel is a child of `elbow`, so the elbow must bend for the panel to
+      // follow the arm. Only rotations are touched; joint anchors keep their authored positions.
+      const isWrist = (object: (typeof objects)[number]) => object.name === 'Hand' && (object as unknown as { type: string }).type === 'Mesh';
+      const REST: Record<string, { x?: number; y?: number; z?: number }> = {
+        'Hand LEFT': { z: 0.11 },
+        arm: { x: 0 },
+        elbow: { x: -0.62, y: -0.1 },
+        forearm: { x: 0.1 },
+        wrist: { x: 0.28, y: 0.939, z: -0.666 },
+      };
+      const joints = objects.filter(object => ['Hand LEFT', 'arm', 'elbow', 'forearm'].includes(object.name) || isWrist(object)).map(object => {
+        const rest = REST[isWrist(object) ? 'wrist' : object.name] ?? {};
+        Object.assign(object.rotation, rest);
+        return { object, role: isWrist(object) ? 'wrist' : object.name, x: object.rotation.x, y: object.rotation.y, z: object.rotation.z };
+      });
       const head = objects.find(object => object.name === 'Head');
       const headPose = head && { x: head.rotation.x, y: head.rotation.y };
       // Retain the diagnostic handle in development only; production has no globals.
@@ -94,17 +88,12 @@ export function SplineRobot({ active, onReady, onError }: Props) {
           if (moving) elapsed += dt;
           const blend = 1 - Math.exp(-5 * dt);
           for (const joint of joints) {
-            const { object, x, y, z } = joint;
-            // Small, phase-offset arcs allow the forearms to follow the shoulders.
-            const shoulder = object.name === 'Hand LEFT';
-            const forearm = object.name === 'forearm';
-            const wrist = object.name === 'Hand';
-            const sway = moving ? Math.sin(elapsed * 1.02 - (wrist ? 1.1 : forearm ? 0.65 : 0)) : 0;
-            const elbow = object.name === 'elbow';
-            const upperArm = object.name === 'arm';
-            const targetX = x + (wrist ? sway * 0.19 : forearm ? sway * 0.34 : upperArm ? sway * 0.20 : 0);
-            const targetY = y + (elbow ? sway * 0.26 : 0);
-            const targetZ = z + (shoulder ? sway * 0.25 : upperArm ? sway * 0.16 : 0);
+            const { object, role, x, y, z } = joint;
+            // Small phase-offset motion: shoulder breathes, elbow flexes, wrist trails behind.
+            const sway = moving ? Math.sin(elapsed * 1.02 - (role === 'wrist' ? 1.1 : role === 'forearm' ? 0.65 : role === 'elbow' ? 0.35 : 0)) : 0;
+            const targetX = x + (role === 'elbow' ? sway * 0.16 : role === 'wrist' ? sway * 0.14 : role === 'arm' ? sway * 0.08 : 0);
+            const targetY = y;
+            const targetZ = z + (role === 'Hand LEFT' ? sway * 0.05 : 0);
             object.rotation.x += (targetX - object.rotation.x) * blend;
             object.rotation.y += (targetY - object.rotation.y) * blend;
             object.rotation.z += (targetZ - object.rotation.z) * blend;
