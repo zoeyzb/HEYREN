@@ -86,8 +86,8 @@ export function Hero() {
       <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
         <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : sceneFailed ? 'is-fallback' : 'is-loading'}`} aria-hidden="true">
           <picture>
-            <source media="(max-width: 767px)" srcSet="/heyrin-robot-instant-sm.webp" type="image/webp" />
-            <img className="hero-static-preview-image" src="/heyrin-robot-instant.webp" alt="" width={864} height={900} decoding="async" />
+            <source media="(max-width: 767px)" srcSet="/heyrin-robot-v2-sm.webp" type="image/webp" />
+            <img className="hero-static-preview-image" src="/heyrin-robot-v2.webp" alt="" width={864} height={900} decoding="async" />
           </picture>
         </div>
         {loadScene && <Suspense fallback={null}>
