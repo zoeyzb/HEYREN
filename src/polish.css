@@ -128,3 +128,12 @@ body { overflow-x: hidden; }
   .rin-review-grid::-webkit-scrollbar { display: none; }
   .rin-review-grid .rin-review-card { flex: 0 0 84%; scroll-snap-align: center; min-height: 0; }
 }
+
+/* Desktop/tablet poster: wrapper fills the scene and the image is sized by height like the live 3D robot,
+   so short browser windows no longer crop the hands/legs and the poster→3D handoff does not jump. */
+@media (min-width: 768px) {
+  .hero-static-preview { place-items: stretch !important; grid-template-columns: minmax(0, 100%) !important; grid-template-rows: minmax(0, 100%) !important; }
+  .hero-static-preview picture { display: block !important; width: 100% !important; height: 100% !important; min-height: 0 !important; margin: 0 !important; }
+  .hero-static-preview-image { width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain !important; object-position: 50% 50% !important;
+    -webkit-mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; }
+}

@@ -209,7 +209,7 @@ body {
 .hero-static-preview { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; visibility: hidden; overflow: hidden; transition: opacity .25s ease; z-index: 2; }
 .hero-static-preview.is-hidden,.hero-static-preview.is-loading { opacity: 0; visibility: hidden; }
 .hero-static-preview.is-fallback { opacity: 1; visibility: visible; }
-.hero-static-preview-image { display: block; width: auto; height: 100%; width: 100%; max-height: none; max-width: 100%; object-fit: cover; mix-blend-mode: screen; -webkit-mask-image: radial-gradient(ellipse 78% 88% at 50% 50%, #000 52%, transparent 100%); mask-image: radial-gradient(ellipse 78% 88% at 50% 50%, #000 52%, transparent 100%); transform: none; }
+.hero-static-preview-image { display: block; width: auto; height: 100%; width: 100%; max-height: none; max-width: 100%; object-fit: contain; object-position: 50% 50%; mix-blend-mode: screen; -webkit-mask-image: radial-gradient(ellipse 78% 88% at 50% 50%, #000 52%, transparent 100%); mask-image: radial-gradient(ellipse 78% 88% at 50% 50%, #000 52%, transparent 100%); transform: none; }
 .hero-scene.is-ready .hero-static-preview { pointer-events: none; }
 
 /* Spline hero layering: character first, original orbital atmosphere above it. */
