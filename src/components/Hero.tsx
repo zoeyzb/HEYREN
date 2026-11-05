@@ -99,7 +99,7 @@ export function Hero() {
           </picture>
         </div>
         {loadScene && <Suspense fallback={null}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneReady(true); setSceneFailed(false); }} onError={() => setSceneFailed(true)} />
+          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneFailed(false); /* let the 3D paint a few frames, then crossfade from the poster */ requestAnimationFrame(() => requestAnimationFrame(() => window.setTimeout(() => setSceneReady(true), 350))); }} onError={() => setSceneFailed(true)} />
         </Suspense>}
       </div>
 

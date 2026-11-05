@@ -137,3 +137,16 @@ body { overflow-x: hidden; }
   .hero-static-preview-image { width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain !important; object-position: 50% 50% !important;
     -webkit-mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; }
 }
+
+/* Phone widths never show the live 3D (its stack is hidden), so the poster must stay visible even if the 3D
+   had already started at a wider size (e.g. a desktop window that was then resized narrow). */
+@media (max-width: 767px) {
+  .hero-static-preview, .hero-static-preview.is-hidden, .hero-static-preview.is-loading, .hero-static-preview.is-fallback { opacity: 1 !important; visibility: visible !important; }
+}
+
+/* Desktop/tablet: crossfade poster -> live 3D (no blank gap). The poster stays until the 3D has painted, then both fade together. */
+@media (min-width: 768px) {
+  .hero-static-preview { transition: opacity .6s ease, visibility 0s linear 0s; }
+  .hero-static-preview.is-hidden { opacity: 0; visibility: hidden; transition: opacity .6s ease, visibility 0s linear .6s; }
+  .hero-spline-character { transition: opacity .6s ease; }
+}
