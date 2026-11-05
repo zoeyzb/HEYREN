@@ -23,12 +23,17 @@ export function Hero() {
 
   // Keep the first load light: the robot poster paints instantly, and the heavy live 3D scene (several MB of Spline
   // runtime + scene) only starts after the page has finished loading and the browser is idle. Skipped on phones,
-  // data-saver and slow connections, where the poster stays.
+  // data-saver, genuine 2g and very low-memory devices, where the poster stays.
   useEffect(() => {
     const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string }; deviceMemory?: number };
     const isPhone = window.matchMedia('(max-width: 767px)').matches;
-    const slow = nav.connection?.saveData || /(^|-)2g|3g/.test(nav.connection?.effectiveType ?? '') || (nav.deviceMemory !== undefined && nav.deviceMemory <= 2);
-    if (isPhone || slow) return;
+    // Only skip the 3D for explicit data-saver, genuine 2g and very low-memory devices. Chrome often *reports* 3g on
+    // perfectly usable connections (e.g. in Pakistan), which used to leave the robot stuck on the still poster forever:
+    // on 3g we still load the scene, just a bit later so the page itself stays fast.
+    const effectiveType = nav.connection?.effectiveType ?? '';
+    const skip3d = nav.connection?.saveData || /(^|-)2g/.test(effectiveType) || (nav.deviceMemory !== undefined && nav.deviceMemory <= 2);
+    if (isPhone || skip3d) return;
+    const extraDelay = effectiveType === '3g' ? 2500 : 0;
     let cancelled = false;
     let handle: number | undefined;
     const go = () => {
@@ -39,8 +44,11 @@ export function Hero() {
       preconnect.crossOrigin = '';
       document.head.appendChild(preconnect);
       const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
-      if (w.requestIdleCallback) handle = w.requestIdleCallback(() => !cancelled && setLoadScene(true), { timeout: 1200 });
-      else handle = window.setTimeout(() => !cancelled && setLoadScene(true), 500);
+      const start = () => {
+        if (w.requestIdleCallback) handle = w.requestIdleCallback(() => !cancelled && setLoadScene(true), { timeout: 1200 });
+        else handle = window.setTimeout(() => !cancelled && setLoadScene(true), 500);
+      };
+      if (extraDelay) handle = window.setTimeout(start, extraDelay); else start();
     };
     if (document.readyState === 'complete') go();
     else window.addEventListener('load', go, { once: true });
