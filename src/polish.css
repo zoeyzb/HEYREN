@@ -150,3 +150,9 @@ body { overflow-x: hidden; }
   .hero-static-preview.is-hidden { opacity: 0; visibility: hidden; transition: opacity .6s ease, visibility 0s linear .6s; }
   .hero-spline-character { transition: opacity .6s ease; }
 }
+
+/* Desktop poster: a slow breathing motion so the robot never looks frozen while the live 3D is still loading. */
+@keyframes posterBreathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-7px) scale(1.007); } }
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .hero-static-preview-image { animation: posterBreathe 6s ease-in-out infinite !important; will-change: transform; }
+}

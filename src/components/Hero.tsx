@@ -22,7 +22,7 @@ export function Hero() {
   }, []);
 
   // Keep the first load light: the robot poster paints instantly, and the heavy live 3D scene (several MB of Spline
-  // runtime + scene) only starts after the page has finished loading and the browser is idle. Skipped on phones,
+  // runtime + scene) starts right after first paint (its code and scene file are fetched in parallel). Skipped on phones,
   // data-saver, genuine 2g and very low-memory devices, where the poster stays.
   useEffect(() => {
     const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string }; deviceMemory?: number };
@@ -33,30 +33,13 @@ export function Hero() {
     const effectiveType = nav.connection?.effectiveType ?? '';
     const skip3d = nav.connection?.saveData || /(^|-)2g/.test(effectiveType) || (nav.deviceMemory !== undefined && nav.deviceMemory <= 2);
     if (isPhone || skip3d) return;
-    const extraDelay = effectiveType === '3g' ? 2500 : 0;
-    let cancelled = false;
-    let handle: number | undefined;
-    const go = () => {
-      if (cancelled) return;
-      const preconnect = document.createElement('link');
-      preconnect.rel = 'preconnect';
-      preconnect.href = 'https://prod.spline.design';
-      preconnect.crossOrigin = '';
-      document.head.appendChild(preconnect);
-      const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
-      const start = () => {
-        if (w.requestIdleCallback) handle = w.requestIdleCallback(() => !cancelled && setLoadScene(true), { timeout: 1200 });
-        else handle = window.setTimeout(() => !cancelled && setLoadScene(true), 500);
-      };
-      if (extraDelay) handle = window.setTimeout(start, extraDelay); else start();
-    };
-    if (document.readyState === 'complete') go();
-    else window.addEventListener('load', go, { once: true });
-    return () => {
-      cancelled = true;
-      window.removeEventListener('load', go);
-      if (handle !== undefined) { (window as Window & { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback?.(handle); window.clearTimeout(handle); }
-    };
+    const extraDelay = effectiveType === '3g' ? 800 : 0;
+    // Start fetching the 3D code immediately (in parallel with the scene file, which index.html preloads) instead of
+    // waiting for the full page load + an idle moment; the poster is already painted, so this stays out of the way.
+    void import('@/three/HeroScene');
+    void import('@splinetool/runtime');
+    const timer = window.setTimeout(() => setLoadScene(true), 150 + extraDelay);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -99,7 +82,7 @@ export function Hero() {
           </picture>
         </div>
         {loadScene && <Suspense fallback={null}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneFailed(false); /* let the 3D paint a few frames, then crossfade from the poster */ requestAnimationFrame(() => requestAnimationFrame(() => window.setTimeout(() => setSceneReady(true), 350))); }} onError={() => setSceneFailed(true)} />
+          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneFailed(false); /* let the 3D paint a few frames, then crossfade from the poster */ requestAnimationFrame(() => requestAnimationFrame(() => window.setTimeout(() => setSceneReady(true), 150))); }} onError={() => setSceneFailed(true)} />
         </Suspense>}
       </div>
 
