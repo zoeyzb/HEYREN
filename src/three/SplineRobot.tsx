@@ -3,18 +3,20 @@ import type { Application } from '@splinetool/runtime';
 
 const SCENE = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
 
-interface Props { active: boolean; onReady?: () => void; onError?: () => void; }
+interface Props { active: boolean; onReady?: () => void; onError?: () => void; onContextLost?: () => void; }
 
 /** One owner for the rig: Spline renders the original asset without its authored
  * startup events; rotations below articulate it without translating joint anchors. */
-export function SplineRobot({ active, onReady, onError }: Props) {
+export function SplineRobot({ active, onReady, onError, onContextLost }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
   const readyRef = useRef(onReady);
   const errorRef = useRef(onError);
+  const lostRef = useRef(onContextLost);
   activeRef.current = active;
   readyRef.current = onReady;
   errorRef.current = onError;
+  lostRef.current = onContextLost;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,6 +35,9 @@ export function SplineRobot({ active, onReady, onError }: Props) {
       pointerY = Math.max(-1, Math.min(1, event.clientY / window.innerHeight * 2 - 1));
     };
     const resetPointer = () => { pointerX = 0; pointerY = 0; };
+    // Chrome drops WebGL contexts under GPU/memory pressure (many tabs). Without this the canvas silently goes blank.
+    const contextLost = (event: Event) => { event.preventDefault(); lostRef.current?.(); };
+    canvas.addEventListener('webglcontextlost', contextLost);
     window.addEventListener('pointermove', pointer, { passive: true });
     document.documentElement.addEventListener('pointerleave', resetPointer);
     window.addEventListener('blur', resetPointer);
@@ -119,6 +124,7 @@ export function SplineRobot({ active, onReady, onError }: Props) {
       disposed = true;
       abort.abort();
       cancelAnimationFrame(frame);
+      canvas.removeEventListener('webglcontextlost', contextLost);
       window.removeEventListener('pointermove', pointer);
       document.documentElement.removeEventListener('pointerleave', resetPointer);
       window.removeEventListener('blur', resetPointer);

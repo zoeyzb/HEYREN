@@ -10,9 +10,10 @@ interface HeroSceneProps {
   active?: boolean;
   onReady?: () => void;
   onError?: () => void;
+  onContextLost?: () => void;
 }
 
-export function HeroScene({ listening, speaking, active = true, onReady, onError }: HeroSceneProps) {
+export function HeroScene({ listening, speaking, active = true, onReady, onError, onContextLost }: HeroSceneProps) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
   const [sceneReady, setSceneReady] = useState(false);
 
@@ -27,14 +28,16 @@ export function HeroScene({ listening, speaking, active = true, onReady, onError
   if (isMobile) return null;
 
   const handleReady = () => {
-    setSceneReady(true);
     onReady?.();
+    // Second WebGL layer (particles) starts only after the robot has painted and crossfaded in, so two contexts
+    // are never created in the same instant.
+    window.setTimeout(() => setSceneReady(true), 1500);
   };
 
   return (
     <div className="hero-spline-stack" aria-label="Interactive Heyrin AI character">
       <div className="hero-spline-character">
-        <SplineRobot active={active} onReady={handleReady} onError={onError} />
+        <SplineRobot active={active} onReady={handleReady} onError={onError} onContextLost={onContextLost} />
       </div>
       {sceneReady && (
         <div className="hero-spline-atmosphere" aria-hidden="true">

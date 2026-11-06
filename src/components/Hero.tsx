@@ -7,6 +7,8 @@ const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default:
 export function Hero() {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
+  const [sceneKey, setSceneKey] = useState(0);
+  const contextLosses = useRef(0);
   const [sceneFailed, setSceneFailed] = useState(false);
   const [heroVisible, setHeroVisible] = useState(true);
   const [loadScene, setLoadScene] = useState(false);
@@ -82,7 +84,7 @@ export function Hero() {
           </picture>
         </div>
         {loadScene && <Suspense fallback={null}>
-          <HeroScene listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneFailed(false); /* let the 3D paint a few frames, then crossfade from the poster */ requestAnimationFrame(() => requestAnimationFrame(() => window.setTimeout(() => setSceneReady(true), 150))); }} onError={() => setSceneFailed(true)} />
+          <HeroScene key={sceneKey} onContextLost={() => { setSceneReady(false); contextLosses.current += 1; if (contextLosses.current > 3) { setSceneFailed(true); return; } window.setTimeout(() => setSceneKey(k => k + 1), 500); }} listening={heroState === 'listening'} speaking={heroState === 'speaking'} activated active={heroVisible} onReady={() => { setSceneFailed(false); /* let the 3D paint a few frames, then crossfade from the poster */ requestAnimationFrame(() => requestAnimationFrame(() => window.setTimeout(() => setSceneReady(true), 150))); }} onError={() => setSceneFailed(true)} />
         </Suspense>}
       </div>
 
