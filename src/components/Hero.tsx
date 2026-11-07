@@ -40,6 +40,7 @@ export function Hero() {
     // waiting for the full page load + an idle moment; the poster is already painted, so this stays out of the way.
     void import('@/three/HeroScene');
     void import('@splinetool/runtime');
+    void import('@/three/HeroAtmosphere');
     const timer = window.setTimeout(() => setLoadScene(true), 150 + extraDelay);
     return () => window.clearTimeout(timer);
   }, []);
@@ -79,8 +80,8 @@ export function Hero() {
       <div className={`hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px] ${sceneReady ? 'is-ready' : ''}`}>
         <div className={`hero-static-preview ${sceneReady ? 'is-hidden' : sceneFailed ? 'is-fallback' : 'is-loading'}`} aria-hidden="true">
           <picture>
-            <source media="(max-width: 767px)" srcSet="/heyrin-robot-v2-sm.webp" type="image/webp" />
-            <img className="hero-static-preview-image" src="/heyrin-robot-v2.webp" alt="" width={864} height={900} decoding="async" />
+            <source media="(max-width: 767px)" srcSet="/heyrin-robot-v3-sm.webp" type="image/webp" />
+            <img className="hero-static-preview-image" src="/heyrin-robot-v3.webp" alt="" width={1152} height={900} decoding="async" />
           </picture>
         </div>
         {loadScene && <Suspense fallback={null}>

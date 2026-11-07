@@ -151,8 +151,10 @@ body { overflow-x: hidden; }
   .hero-spline-character { transition: opacity .6s ease; }
 }
 
-/* Desktop poster: a slow breathing motion so the robot never looks frozen while the live 3D is still loading. */
-@keyframes posterBreathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-7px) scale(1.007); } }
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  .hero-static-preview-image { animation: posterBreathe 6s ease-in-out infinite !important; will-change: transform; }
-}
+
+/* v3 poster = a capture of the finished scene (robot + rings + particles), so the swap to the live 3D is invisible.
+   No separate mask/ring/blend styling on it any more; it simply fills the scene box like the live canvas does. */
+.hero-static-preview-image { -webkit-mask-image: none !important; mask-image: none !important; animation: none !important; transform: none !important; mix-blend-mode: screen; }
+@media (min-width: 768px) { .hero-static-preview-image { object-fit: cover !important; object-position: 50% 50% !important; } }
+/* the CSS orbit glow/ring behind the old poster would double up with the rings now baked into the image */
+.hero-scene::before, .hero-scene::after { display: none !important; }

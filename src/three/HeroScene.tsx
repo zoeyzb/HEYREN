@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { SplineRobot } from './SplineRobot';
 
 const HeroAtmosphere = lazy(() => import('./HeroAtmosphere').then(module => ({ default: module.HeroAtmosphere })));
@@ -15,7 +15,15 @@ interface HeroSceneProps {
 
 export function HeroScene({ listening, speaking, active = true, onReady, onError, onContextLost }: HeroSceneProps) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
-  const [sceneReady, setSceneReady] = useState(false);
+  // The robot and the ring/particle layer must appear together: report ready only when BOTH have painted,
+  // so nothing pops in after the static poster has already gone.
+  const robotReady = useRef(false);
+  const atmosphereReady = useRef(false);
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+  const maybeReady = () => { if (robotReady.current && atmosphereReady.current) onReadyRef.current?.(); };
+  const handleRobotReady = () => { robotReady.current = true; maybeReady(); };
+  const handleAtmosphereReady = () => { atmosphereReady.current = true; maybeReady(); };
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 767px)');
@@ -27,25 +35,16 @@ export function HeroScene({ listening, speaking, active = true, onReady, onError
 
   if (isMobile) return null;
 
-  const handleReady = () => {
-    onReady?.();
-    // Second WebGL layer (particles) starts only after the robot has painted and crossfaded in, so two contexts
-    // are never created in the same instant.
-    window.setTimeout(() => setSceneReady(true), 1500);
-  };
-
   return (
     <div className="hero-spline-stack" aria-label="Interactive Heyrin AI character">
       <div className="hero-spline-character">
-        <SplineRobot active={active} onReady={handleReady} onError={onError} onContextLost={onContextLost} />
+        <SplineRobot active={active} onReady={handleRobotReady} onError={onError} onContextLost={onContextLost} />
       </div>
-      {sceneReady && (
-        <div className="hero-spline-atmosphere" aria-hidden="true">
-          <Suspense fallback={null}>
-            <HeroAtmosphere speaking={speaking} listening={listening} active={active} />
-          </Suspense>
-        </div>
-      )}
+      <div className="hero-spline-atmosphere" aria-hidden="true">
+        <Suspense fallback={null}>
+          <HeroAtmosphere speaking={speaking} listening={listening} active={active} onCreated={handleAtmosphereReady} />
+        </Suspense>
+      </div>
     </div>
   );
 }

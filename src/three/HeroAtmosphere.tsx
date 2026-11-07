@@ -5,9 +5,10 @@ interface HeroAtmosphereProps {
   listening?: boolean;
   speaking?: boolean;
   active?: boolean;
+  onCreated?: () => void;
 }
 
-export function HeroAtmosphere({ listening, speaking, active = true }: HeroAtmosphereProps) {
+export function HeroAtmosphere({ listening, speaking, active = true, onCreated }: HeroAtmosphereProps) {
   return (
     <Canvas
       dpr={[1, 1.2]}
@@ -15,6 +16,7 @@ export function HeroAtmosphere({ listening, speaking, active = true }: HeroAtmos
       camera={{ position: [0, 0, 6], fov: 40 }}
       gl={{ alpha: true, antialias: false, powerPreference: 'high-performance', stencil: false, depth: false }}
       style={{ background: 'transparent' }}
+      onCreated={() => onCreated?.()}
     >
       <ProcessingRings />
       <SignalParticles count={42} />
