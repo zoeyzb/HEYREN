@@ -1,16 +1,18 @@
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Hero } from '@/components/Hero';
-import { VoiceDemo } from '@/components/VoiceDemo';
-import { Reviews } from '@/components/Reviews';
-import { Capabilities } from '@/components/Capabilities';
-import { HowItWorks } from '@/components/HowItWorks';
-import { UseCases } from '@/components/UseCases';
-import { GetStarted } from '@/components/GetStarted';
-import { Contact } from '@/components/Contact';
-import { FAQ } from '@/components/FAQ';
-import { FinalCTA, Footer } from '@/components/FinalCTA';
+
+const BelowFold = lazy(() => import('./BelowFold'));
+const LazyFooter = lazy(() => import('./BelowFold').then((m) => ({ default: m.Footer })));
 
 function App() {
+  // Paint nav + hero first, then pull in the rest of the page.
+  const [showRest, setShowRest] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShowRest(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-ink-base text-soft">
       {/* Noise overlay */}
@@ -19,22 +21,20 @@ function App() {
       {/* Navigation */}
       <Navigation />
 
-      {/* Sections */}
       <main>
         <Hero />
-        <HowItWorks />
-        <VoiceDemo />
-        <Capabilities />
-        <UseCases />
-        <Reviews />
-        <GetStarted />
-        <Contact />
-        <FAQ />
-        <FinalCTA />
+        {showRest && (
+          <Suspense fallback={null}>
+            <BelowFold />
+          </Suspense>
+        )}
       </main>
 
-      {/* Footer */}
-      <Footer />
+      {showRest && (
+        <Suspense fallback={null}>
+          <LazyFooter />
+        </Suspense>
+      )}
     </div>
   );
 }

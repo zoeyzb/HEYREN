@@ -219,7 +219,7 @@ body {
 .hero-spline-character > div, .hero-spline-character canvas { width: 100% !important; height: 100% !important; background: transparent !important; }
 .hero-spline-atmosphere { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .hero-spline-atmosphere canvas { width: 100% !important; height: 100% !important; }
-@media (max-width: 767px) { .hero-spline-stack { display: none; } .hero-static-preview.is-loading,.hero-static-preview.is-fallback { opacity: .94; visibility: visible; } .hero-static-preview-image { height: 94%; max-width: 120%; transform: translateY(8%); } }
+@media (max-width: 767px) { .hero-static-preview.is-loading,.hero-static-preview.is-fallback { opacity: .94; visibility: visible; } .hero-static-preview-image { height: 94%; max-width: 120%; transform: translateY(8%); } }
 
 /* The full-resolution transparent robot stays visible while the live Spline rig boots. */
 @media (min-width: 768px) {
@@ -229,3 +229,8 @@ body {
 @media (max-width: 767px) {
   .hero-static-preview-image { -webkit-mask-image: radial-gradient(ellipse 48% 48% at 50% 49%, #000 40%, rgba(0,0,0,.72) 60%, transparent 100%); mask-image: radial-gradient(ellipse 48% 48% at 50% 49%, #000 40%, rgba(0,0,0,.72) 60%, transparent 100%); }
 }
+
+/* ambient glow pulse (was a GSAP tween; CSS keeps GSAP off the critical path) */
+@keyframes heyrinGlow { from { transform: scale(1); opacity: 1; } to { transform: scale(1.08); opacity: .72; } }
+.hero-orbit-glow { animation: heyrinGlow 3.8s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .hero-orbit-glow { animation: none; } }

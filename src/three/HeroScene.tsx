@@ -33,8 +33,6 @@ export function HeroScene({ listening, speaking, active = true, onReady, onError
     return () => query.removeEventListener?.('change', update);
   }, []);
 
-  if (isMobile) return null;
-
   return (
     <div className="hero-spline-stack" aria-label="Interactive Heyrin AI character">
       <div className="hero-spline-character">
@@ -42,7 +40,7 @@ export function HeroScene({ listening, speaking, active = true, onReady, onError
       </div>
       <div className="hero-spline-atmosphere" aria-hidden="true">
         <Suspense fallback={null}>
-          <HeroAtmosphere speaking={speaking} listening={listening} active={active} onCreated={handleAtmosphereReady} />
+          <HeroAtmosphere speaking={speaking} listening={listening} active={active} lite={isMobile} onCreated={handleAtmosphereReady} />
         </Suspense>
       </div>
     </div>

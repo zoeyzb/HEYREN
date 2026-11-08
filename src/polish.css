@@ -138,17 +138,19 @@ body { overflow-x: hidden; }
     -webkit-mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; }
 }
 
-/* Phone widths never show the live 3D (its stack is hidden), so the poster must stay visible even if the 3D
-   had already started at a wider size (e.g. a desktop window that was then resized narrow). */
-@media (max-width: 767px) {
-  .hero-static-preview, .hero-static-preview.is-hidden, .hero-static-preview.is-loading, .hero-static-preview.is-fallback { opacity: 1 !important; visibility: visible !important; }
-}
+/* Phones now run the live 3D too: the poster must go away once it is ready (handled by the swap rules below). */
 
-/* Desktop/tablet: crossfade poster -> live 3D (no blank gap). The poster stays until the 3D has painted, then both fade together. */
-@media (min-width: 768px) {
-  .hero-static-preview { transition: opacity .6s ease, visibility 0s linear 0s; }
-  .hero-static-preview.is-hidden { opacity: 0; visibility: hidden; transition: opacity .6s ease, visibility 0s linear .6s; }
-  .hero-spline-character { transition: opacity .6s ease; }
+/* Poster -> live 3D swap, all screen sizes. The live robot + rings switch on instantly (no fade, so there is no
+   dip where both are half transparent); the poster, which sits on top, then fades away in a short .22s. */
+.hero-static-preview { transition: opacity .22s ease, visibility 0s linear 0s; }
+.hero-static-preview.is-hidden { opacity: 0; visibility: hidden; transition: opacity .22s ease, visibility 0s linear .22s; }
+.hero-spline-character { transition: none !important; }
+
+/* Phone: poster fills the scene box exactly like the live canvas does, so the swap does not jump. */
+@media (max-width: 767px) {
+  .hero-static-preview { place-items: stretch !important; }
+  .hero-static-preview picture { display: block !important; width: 100% !important; height: 100% !important; margin: 0 !important; }
+  .hero-static-preview-image { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: 50% 50% !important; }
 }
 
 
@@ -158,3 +160,8 @@ body { overflow-x: hidden; }
 @media (min-width: 768px) { .hero-static-preview-image { object-fit: cover !important; object-position: 50% 50% !important; } }
 /* the CSS orbit glow/ring behind the old poster would double up with the rings now baked into the image */
 .hero-scene::before, .hero-scene::after { display: none !important; }
+
+/* Phone: the poster is never perfectly still while the live robot downloads (tiny float, GPU only). */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .hero-static-preview.is-loading .hero-static-preview-image { animation: heyrinFloat 5.5s ease-in-out infinite !important; }
+}
