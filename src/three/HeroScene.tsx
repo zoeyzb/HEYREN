@@ -21,8 +21,11 @@ export function HeroScene({ listening, speaking, active = true, onReady, onError
   const atmosphereReady = useRef(false);
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
-  const maybeReady = () => { if (robotReady.current && atmosphereReady.current) onReadyRef.current?.(); };
-  const handleRobotReady = () => { robotReady.current = true; maybeReady(); };
+  const fired = useRef(false);
+  const fire = () => { if (!fired.current) { fired.current = true; onReadyRef.current?.(); } };
+  const maybeReady = () => { if (robotReady.current && atmosphereReady.current) fire(); };
+  // The robot is the main thing: if the ring layer is slow or fails (slow phone network, iOS WebGL limits), show the robot anyway after 2.5s.
+  const handleRobotReady = () => { robotReady.current = true; maybeReady(); window.setTimeout(fire, 2500); };
   const handleAtmosphereReady = () => { atmosphereReady.current = true; maybeReady(); };
 
   useEffect(() => {

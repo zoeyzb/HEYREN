@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 
 const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default: m.HeroScene })));
 
-export function Hero() {
+export function Hero({ startHeavy = true }: { startHeavy?: boolean }) {
   const [heroState, setHeroState] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneKey, setSceneKey] = useState(0);
@@ -26,6 +26,8 @@ export function Hero() {
   // runtime + scene) starts right after first paint (its code and scene file are fetched in parallel). Skipped on phones,
   // data-saver, genuine 2g and very low-memory devices, where the poster stays.
   useEffect(() => {
+    // Wait until the rest of the page (a small chunk) has arrived, so the multi-MB 3D download never starves it on slow phone networks.
+    if (!startHeavy) return;
     const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string }; deviceMemory?: number };
     // Phones now get the live robot too (lighter atmosphere layer, see HeroScene); the poster only stays for the cases below.
     // Only skip the 3D for explicit data-saver, genuine 2g and very low-memory devices. Chrome often *reports* 3g on
@@ -44,7 +46,7 @@ export function Hero() {
     void fetch('https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode').catch(() => {});
     const timer = window.setTimeout(() => setLoadScene(true), 150 + extraDelay);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [startHeavy]);
 
   useEffect(() => {
     if (!heroRef.current || typeof IntersectionObserver === 'undefined') return;

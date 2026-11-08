@@ -8,8 +8,13 @@ const LazyFooter = lazy(() => import('./BelowFold').then((m) => ({ default: m.Fo
 function App() {
   // Paint nav + hero first, then pull in the rest of the page.
   const [showRest, setShowRest] = useState(false);
+  const [restLoaded, setRestLoaded] = useState(false);
   useEffect(() => {
-    const id = requestAnimationFrame(() => setShowRest(true));
+    const id = requestAnimationFrame(() => {
+      setShowRest(true);
+      // The sections chunk is small; the 3D robot (several MB) only starts after it has arrived, so scrolling never shows empty black.
+      Promise.all([import('./BelowFold')]).then(() => setRestLoaded(true), () => setRestLoaded(true));
+    });
     return () => cancelAnimationFrame(id);
   }, []);
 
@@ -22,9 +27,9 @@ function App() {
       <Navigation />
 
       <main>
-        <Hero />
+        <Hero startHeavy={restLoaded} />
         {showRest && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<div aria-hidden="true" style={{ minHeight: '100vh' }} />}>
             <BelowFold />
           </Suspense>
         )}
