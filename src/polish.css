@@ -165,3 +165,14 @@ body { overflow-x: hidden; }
 @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
   .hero-static-preview.is-loading .hero-static-preview-image { animation: heyrinFloat 5.5s ease-in-out infinite !important; }
 }
+
+/* ===== v4: the robot is now a looping video (pure-black background) =====
+   Screen-blend the whole scene layer onto the page so the clip's edges vanish (blending must happen on the element
+   that owns the stacking context, i.e. .hero-scene, not on the video inside it). */
+.hero-scene { mix-blend-mode: screen; }
+.hero-static-preview-image { mix-blend-mode: normal !important; -webkit-mask-image: none !important; mask-image: none !important; }
+.hero-static-preview-image::-webkit-media-controls { display: none !important; }
+@media (max-width: 767px) {
+  .hero-scene { top: 3.4rem !important; height: 20.5rem !important; }
+  .hero-content { padding-top: 22.5rem !important; }
+}
