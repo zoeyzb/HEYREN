@@ -1,2 +1,5 @@
 [functions.contact-inquiry]
 verify_jwt = false
+
+[functions.heyrin-chat]
+verify_jwt = false # Browser key is public; a DB-backed IP quota and private provider key are required.

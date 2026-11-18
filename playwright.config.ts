@@ -5,7 +5,9 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: [['list'], ['html', {open: 'never', outputFolder: 'review/playwright-report'}]],
   use: { baseURL: 'http://127.0.0.1:4175', trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], channel: 'chrome' } }],
+  projects: process.env.HEYRIN_WEBKIT
+    ? [{ name: 'webkit', use: { ...devices['Desktop Safari'] } }]
+    : [{ name: 'chromium', use: { ...devices['Desktop Chrome'], channel: 'chrome' } }],
   webServer: {
     command: 'npm run preview -- --host 127.0.0.1 --port 4175 --strictPort',
     url: 'http://127.0.0.1:4175',

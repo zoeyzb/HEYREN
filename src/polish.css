@@ -176,3 +176,99 @@ body { overflow-x: hidden; }
   .hero-scene { top: 3.4rem !important; height: 20.5rem !important; }
   .hero-content { padding-top: 22.5rem !important; }
 }
+
+/* Keep the real robot poster visible until the clip can play. */
+.hero-robot-motion { position: absolute; inset: 0; opacity: 0; }
+.hero-scene.is-playing .hero-robot-motion { opacity: 1; }
+.hero-scene.is-playing picture { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-robot-motion { display: none; }
+  .hero-scene.is-playing picture { visibility: visible; }
+}
+
+.hero-shell:not(.is-in-view) .hero-orbit-glow,
+.hero-shell:not(.is-in-view) .animate-pulse-slow { animation-play-state: paused; }
+@media (max-width: 767px) {
+  .hero-static-preview-image { filter: none; }
+}
+
+/* This state is triggered by actual prerecorded audio playback, not a simulated agent. */
+.hero-scene[data-voice-state="speaking"] { filter: saturate(1.17) brightness(1.06); transition: filter 240ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .hero-scene[data-voice-state="speaking"] { transition: none; } }
+
+/* Optional real chat integration; no fake responses when the backend is absent. */
+.heyrin-chat-root{position:fixed;bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));right:1.2rem;z-index:70;font-family:Inter,system-ui,sans-serif}
+.heyrin-chat-launcher{display:flex;align-items:center;justify-content:center;gap:.6rem;border:1px solid rgba(185,255,50,.55);border-radius:99px;padding:.85rem 1.1rem;background:#b9ff32;color:#050607;box-shadow:0 12px 35px #0009;font-size:.83rem;font-weight:700;min-height:48px}
+.heyrin-chat-launcher:focus-visible,.heyrin-chat-panel button:focus-visible,.heyrin-chat-panel a:focus-visible,.heyrin-chat-panel textarea:focus-visible{outline:3px solid #b9ff32;outline-offset:3px}
+.heyrin-chat-panel{position:absolute;bottom:calc(100% + .9rem);right:0;display:flex;flex-direction:column;width:min(390px,calc(100vw - 2rem));height:min(590px,calc(100dvh - 7.8rem));overflow:hidden;background:#101415;border:1px solid rgba(185,255,50,.22);border-radius:20px;color:#f6f7f4;box-shadow:0 25px 90px #000c;isolation:isolate}
+.heyrin-chat-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1.1rem 1.2rem;border-bottom:1px solid #303638}
+.heyrin-chat-eyebrow{font-size:.6rem;letter-spacing:.18em;color:#b9ff32;font-family:monospace}
+.heyrin-chat-header h2{font-size:1.15rem;font-weight:650;margin-top:.25rem}
+.heyrin-chat-header button{display:grid;place-items:center;min-width:40px;min-height:40px;border-radius:10px;color:#e7ebe4}
+.heyrin-chat-messages{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:1.3rem;display:flex;flex-direction:column;gap:1rem}
+.heyrin-chat-intro,.heyrin-chat-unavailable p{line-height:1.65;color:#aeb9b0;font-size:.86rem}
+.heyrin-chat-bubble{max-width:92%;padding:.75rem .9rem;border:1px solid #303b35;border-radius:15px;background:#1b2320;overflow-wrap:anywhere;align-self:flex-start}
+.heyrin-chat-bubble.user{align-self:flex-end;background:#2a3c22;border-color:#44602b}
+.heyrin-chat-bubble span{display:block;color:#b9ff32;font-family:monospace;letter-spacing:.1em;font-size:.62rem;text-transform:uppercase;margin-bottom:.35rem}
+.heyrin-chat-bubble p{line-height:1.55;white-space:pre-wrap;font-size:.86rem}
+.heyrin-chat-thinking{display:flex;align-items:center;gap:.5rem;color:#c6d2c2;font-size:.8rem}
+.heyrin-chat-form{padding:1rem;border-top:1px solid #303638}
+.heyrin-chat-form label{display:block;font-size:.75rem;color:#bdc9bd;margin-bottom:.45rem}
+.heyrin-chat-input-row{display:flex;align-items:end;gap:.5rem}
+.heyrin-chat-input-row textarea{flex:1;min-width:0;max-height:110px;resize:vertical;background:#070a0a;border:1px solid #3c4b3c;border-radius:12px;padding:.75rem .8rem;font-size:.85rem;color:#fff;line-height:1.4}
+.heyrin-chat-input-row button{display:grid;place-items:center;min-width:44px;min-height:44px;border-radius:12px;background:#b9ff32;color:#050607}
+.heyrin-chat-input-row button:disabled{opacity:.42;cursor:not-allowed}
+.heyrin-chat-form>p{font-size:.67rem;color:#9da89d;margin-top:.6rem;line-height:1.35}
+.heyrin-chat-form .heyrin-chat-error{color:#ffbcbc;font-size:.76rem;margin:0 0 .65rem}
+.heyrin-chat-unavailable{flex:1;display:flex;flex-direction:column;justify-content:center;padding:1.4rem;gap:1rem}
+.heyrin-chat-unavailable .heyrin-chat-unavailable-title{color:#f6f7f4;font-weight:600;font-size:1rem}
+.heyrin-chat-unavailable a{display:flex;gap:.5rem;align-items:center;min-height:42px;color:#b9ff32;font-size:.86rem;text-decoration:underline;text-underline-offset:4px}
+@media(max-width:767px){.heyrin-chat-root{right:1rem;bottom:calc(.8rem + env(safe-area-inset-bottom,0px))}.heyrin-chat-panel{position:fixed;inset:0;bottom:auto;right:auto;width:100vw;height:100dvh;max-height:none;border:0;border-radius:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.heyrin-chat-root:has(.heyrin-chat-panel) .heyrin-chat-launcher{display:none}}
+@media(prefers-reduced-motion:reduce){.heyrin-chat-root *, .heyrin-chat-root *::before,.heyrin-chat-root *::after{animation:none!important;transition:none!important}}
+
+/* On phones, place chat next to the existing menu rather than over full-width CTAs. */
+@media (max-width: 767px) {
+  .heyrin-chat-root { top: calc(.4rem + env(safe-area-inset-top,0px)); bottom: auto; right: 3.3rem; }
+  .heyrin-chat-launcher { width: 48px; height: 48px; min-height: 48px; padding: 0; border: 0; border-radius: 12px; background: transparent; color: #f6f7f4; box-shadow: none; }
+  .heyrin-chat-launcher span { display: none; }
+}
+
+/* On-demand original Spline rig: the light MP4 stays visible until the canvas is ready. */
+.hero-rig-layer { position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;transition:opacity .24s ease; }
+.hero-rig-layer.is-ready { opacity:1; }
+.hero-rig-layer .hero-spline-character { inset:0;opacity:1!important; }
+.hero-rig-layer canvas { display:block;width:100%!important;height:100%!important;background:transparent!important; }
+.hero-scene.is-interactive .hero-static-preview { opacity:0!important;visibility:hidden!important; }
+.hero-rig-toggle { position:absolute;right:1rem;bottom:1.15rem;z-index:5;display:flex;align-items:center;justify-content:center;min-height:35px;padding:.42rem .85rem;border:1px solid rgba(185,255,50,.36);border-radius:99px;color:#cfdacb;background:rgba(8,12,10,.82);font:600 .7rem/1.15 Inter,system-ui,sans-serif;letter-spacing:.015em;backdrop-filter:blur(12px);cursor:pointer; }
+.hero-rig-toggle:hover,.hero-rig-toggle:focus-visible { border-color:#b9ff32;color:#b9ff32; }
+.hero-rig-toggle:focus-visible { outline:2px solid #b9ff32;outline-offset:3px; }
+.hero-rig-toggle:disabled { opacity:.35;cursor:not-allowed; }
+.hero-rig-error { position:absolute;z-index:5;right:1rem;bottom:3.8rem;max-width:200px;padding:.55rem .7rem;border:1px solid rgba(185,255,50,.25);border-radius:8px;color:#ebefe7;background:rgba(7,12,8,.9);font-size:.7rem; }
+@media (max-width:767px) { .hero-rig-toggle { bottom:.8rem;right:.8rem; } .hero-rig-error { bottom:3.3rem;right:.8rem; } }
+@media (prefers-reduced-motion:reduce) { .hero-rig-layer { transition:none; } }
+/* Keep transparent hero layout from swallowing clicks intended for the rig toggle. */
+.hero-content { pointer-events:none; }
+.hero-copy-column { pointer-events:auto; }
+
+/* Avoid the independently fixed chat launcher and the hero's CTA interaction zone. */
+@media (min-width: 1024px) {
+  .hero-rig-toggle { right: 10.75rem; }
+  .hero-rig-error { right: 10.75rem; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-rig-toggle { top: 5.2rem; right: 1.1rem; bottom: auto; }
+  .hero-rig-error { top: 8rem; right: 1.1rem; bottom: auto; }
+}
+
+
+/* Useful static help before a paid real-time AI integration is available. */
+.heyrin-chat-guide { display:block; overflow-y:auto; overscroll-behavior:contain; }
+.heyrin-chat-guide > * + * { margin-top:.75rem; }
+.heyrin-chat-guide-topics { display:grid; gap:.45rem; }
+.heyrin-chat-guide-topics button { display:flex; width:100%; min-height:44px; align-items:center; justify-content:space-between; gap:.75rem; text-align:left; color:#f0f5eb; background:#1b2420; border:1px solid #38443a; border-radius:10px; padding:.65rem .8rem; font-size:.81rem; }
+.heyrin-chat-guide-topics button:hover,.heyrin-chat-guide-topics button[aria-expanded="true"] { border-color:#b9ff32; background:#263526; }
+.heyrin-chat-guide-topics button:focus-visible { outline:2px solid #b9ff32; outline-offset:2px; }
+.heyrin-chat-guide-answer { padding:.75rem .9rem; border-left:2px solid #b9ff32; background:#1b2520; border-radius:0 10px 10px 0; }
+.heyrin-chat-guide-answer span { font:600 .65rem/1.3 monospace; color:#b9ff32; letter-spacing:.09em; }
+.heyrin-chat-guide-answer p { padding-top:.35rem; color:#e0e8db; font-size:.8rem; line-height:1.55; }
+.heyrin-chat-guide .heyrin-chat-guide-disclaimer { font-size:.71rem; color:#a4b4a8; }

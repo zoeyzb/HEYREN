@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, CalendarCheck2, Check, Headphones, Pause, Play, RotateCcw, CircleDot, Volume2, VolumeX } from 'lucide-react';
 
 type Dialogue = { speaker: 'Ren' | 'Caller'; text: string; at: number };
@@ -29,11 +29,11 @@ const SCENARIOS: Scenario[] = [
       { speaker: "Ren", text: "Okay, that sounds like a good fit. I can get a few details and have the team follow up with you.", at: 16032 },
     ]},
 ];
-function Wave({ active, speaker = 'agent' }: { active: boolean; speaker?: 'agent' | 'caller' }) {
+const Wave = memo(function Wave({ active, speaker = 'agent' }: { active: boolean; speaker?: 'agent' | 'caller' }) {
   return <div className={`rin-wave ${active ? 'is-active' : ''} ${speaker === 'caller' ? 'is-caller' : ''}`} aria-hidden="true">
     {Array.from({length: 46}, (_,i) => <i key={i} style={{'--i':i, '--h': `${12 + ((i * 17 + 9) % 62)}%`} as React.CSSProperties} />)}
   </div>;
-}
+});
 export function VoiceDemo() {
   const [scenario, setScenario] = useState(0);
   const [elapsed, setElapsed] = useState(0);
@@ -43,8 +43,6 @@ export function VoiceDemo() {
   const [audioError, setAudioError] = useState(false);
   const audioRunRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const lastRef = useRef<number | null>(null);
-  const frameRef = useRef<number | null>(null);
   const experienceRef = useRef<HTMLElement>(null);
   const selected = SCENARIOS[scenario];
   const duration = selected.duration;
@@ -54,7 +52,7 @@ export function VoiceDemo() {
   const displaySeconds = Math.floor(elapsed / 1000);
   useEffect(() => {
     const el = experienceRef.current;
-    if (!el) return;
+    if (!el || typeof IntersectionObserver === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !started) { setStarted(true); setPlaying(true); observer.disconnect(); }
     }, {threshold:0.15});
@@ -62,19 +60,22 @@ export function VoiceDemo() {
     return () => observer.disconnect();
   }, [started]);
   useEffect(() => {
-    if (!playing) { lastRef.current = null; return; }
-    const tick = (now: number) => {
-      const prev = lastRef.current ?? now;
-      lastRef.current = now;
-      setElapsed(t => Math.min(duration, t + Math.min(80, now - prev)));
-      frameRef.current = requestAnimationFrame(tick);
-    };
-    frameRef.current = requestAnimationFrame(tick);
-    return () => { if(frameRef.current !== null) cancelAnimationFrame(frameRef.current); lastRef.current = null; };
+    if (!playing) return;
+    let previous = performance.now();
+    const timer = window.setInterval(() => {
+      const now = performance.now();
+      const delta = now - previous;
+      previous = now;
+      if (!document.hidden) setElapsed(time => Math.min(duration, time + delta));
+    }, 100);
+    return () => window.clearInterval(timer);
   }, [playing, duration]);
   useEffect(() => { if (complete) setPlaying(false); }, [complete]);
   const switchScenario = (i: number) => { stopAudio(); setScenario(i); setElapsed(0); setStarted(true); setPlaying(true); };
   const replay = () => { stopAudio(); setElapsed(0); setPlaying(true); };
+  const notifyRobot = (active: boolean) => {
+    window.dispatchEvent(new CustomEvent('heyrin:recorded-audio', { detail: { active } }));
+  };
   const stopAudio = () => {
     audioRunRef.current += 1;
     if (audioRef.current) {
@@ -85,6 +86,7 @@ export function VoiceDemo() {
     }
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setAudioPlaying(false);
+    notifyRobot(false);
   };
   const listenToScenario = () => {
     if (audioPlaying) { stopAudio(); return; }
@@ -92,11 +94,15 @@ export function VoiceDemo() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setPlaying(false);
     setElapsed(0);
-    setAudioPlaying(true);
     setAudioError(false);
     const audio = new Audio(`/audio/${selected.id}.mp3`);
     audioRef.current = audio;
     audio.preload = 'auto';
+    audio.onplaying = () => {
+      if (run !== audioRunRef.current) return;
+      setAudioPlaying(true);
+      notifyRobot(true);
+    };
     audio.ontimeupdate = () => {
       if (run === audioRunRef.current) setElapsed(Math.min(duration, audio.currentTime * 1000));
     };
@@ -104,23 +110,25 @@ export function VoiceDemo() {
       if (run !== audioRunRef.current) return;
       setElapsed(duration);
       setAudioPlaying(false);
+      notifyRobot(false);
       audioRef.current = null;
     };
     audio.onerror = () => {
       if (run !== audioRunRef.current) return;
       audioRef.current = null;
       setAudioPlaying(false);
+      notifyRobot(false);
       setAudioError(true);
     };
     void audio.play().catch(() => {
       if (run !== audioRunRef.current) return;
       audioRef.current = null;
       setAudioPlaying(false);
+      notifyRobot(false);
       setAudioError(true);
     });
   };
-  useEffect(() => () => { audioRunRef.current += 1; audioRef.current?.pause(); if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }, []);
-  useEffect(() => { stopAudio(); }, [scenario]);
+  useEffect(() => () => { audioRunRef.current += 1; audioRef.current?.pause(); window.dispatchEvent(new CustomEvent('heyrin:recorded-audio', { detail: { active: false } })); }, []);
   return <section id="experience" className="rin-section rin-experience" ref={experienceRef}>
     <div className="rin-container">
       <div className="rin-overline"><span>02 / CONVERSATION PLAYBACK</span><span>EXPLORE THE INTERACTION</span></div>
@@ -151,7 +159,7 @@ export function VoiceDemo() {
           <div className="rin-console-controls">
             <div className="rin-progress" role="progressbar" aria-label="Demo playback progress" aria-valuenow={Math.round(elapsed / duration * 100)} aria-valuemin={0} aria-valuemax={100}><span style={{width:`${elapsed/duration*100}%`}}/></div>
             {audioError && <p className="rin-audio-error" role="status">The recording could not load. Please try again.</p>}
-            <div className="rin-controls-line"><div className="rin-mono">RECORDED CALL / {String(Math.ceil(duration/1000)).padStart(2,'0')} SEC</div><div><button aria-label={audioPlaying ? 'Stop spoken demo' : 'Listen to spoken demo'} title={audioPlaying ? 'Stop audio' : 'Listen to audio'} onClick={listenToScenario}>{audioPlaying ? <VolumeX size={16}/> : <Volume2 size={16}/>}<span>{audioPlaying ? 'Stop audio' : 'Listen'}</span></button><button aria-label="Replay conversation" title="Replay conversation" onClick={replay}><RotateCcw size={17}/></button><button className="rin-play-btn" aria-label={playing?'Pause conversation':'Play conversation'} title={playing?'Pause':'Play'} onClick={() => { if (complete) replay(); else setPlaying(p=>!p); }}>{playing?<Pause size={17} fill="currentColor"/>:<Play size={17} fill="currentColor"/>}{playing?'Pause':complete?'Replay':'Play'}</button></div></div>
+            <div className="rin-controls-line"><div className="rin-mono">RECORDED CALL / {String(Math.ceil(duration/1000)).padStart(2,'0')} SEC</div><div><button aria-label={audioPlaying ? 'Stop spoken demo' : 'Listen to spoken demo'} title={audioPlaying ? 'Stop audio' : 'Listen to audio'} onClick={listenToScenario}>{audioPlaying ? <VolumeX size={16}/> : <Volume2 size={16}/>}<span>{audioPlaying ? 'Stop audio' : 'Listen'}</span></button><button aria-label="Replay conversation" title="Replay conversation" onClick={replay}><RotateCcw size={17}/></button><button className="rin-play-btn" aria-label={playing?'Pause conversation':'Play conversation'} title={playing?'Pause':'Play'} onClick={() => { if (complete) replay(); else { if (audioPlaying) stopAudio(); setPlaying(p=>!p); } }}>{playing?<Pause size={17} fill="currentColor"/>:<Play size={17} fill="currentColor"/>}{playing?'Pause':complete?'Replay':'Play'}</button></div></div>
           </div>
         </div>
         <aside className="rin-outcome">

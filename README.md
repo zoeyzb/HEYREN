@@ -53,3 +53,31 @@ Playwright browser binaries may need to be installed on a fresh machine with `np
 ## Current boundaries
 
 The 3D character and conversation playback are presentation/demo features. Live speech recognition, real-time telephony, CRM writes, calendar booking and production contact delivery should not be inferred from the UI. The current contact component opens an email draft; the Supabase function is included as a separate implementation path.
+
+## November 18, 2026: responsive robot + opt-in chat integration
+
+The default hero uses the original robot composition as a 6.17-second optimized MP4. It shifts smoothly on fine-pointer desktops by up to 12px horizontally / 7px vertically, stops at rest, and respects reduced motion. Phones use the small video and original poster fallback. A new **Interactive 3D** control can lazily load the original Spline rig on desktop or mobile using one WebGL canvas. The original Spline model includes easing for head gaze, arm articulation and a slightly stronger speaking movement when a real recorded demo plays. The heavy Spline runtime is NOT loaded by default. The scene binary is served locally from `public/scene.splinecode` (rather than relying on a third-party CDN at run time) and is fetched only after the visitor chooses 3D. The video stays visible until the rig renders; network errors, missing WebGL, timeouts and context loss restore the original view. Its foreground-only timeout avoids false failures during background-tab throttling. Reduced-motion users cannot enable the animated WebGL mode. This is a manual opt-in, not an automatic reactivation; real-device GPU/battery profiling remains necessary.
+
+The original prerecorded conversation showcase is still a demo, **not** a real phone agent. A mobile-friendly AI chat UI and Supabase Edge Function are now implemented **locally**, behind an explicit production opt-in. No paid AI key is bundled into the browser, and neither the chat endpoint nor its quota migration has been deployed as part of this work.
+
+Before enabling public chat, an owner must approve API spending and deployment, then:
+
+1. Apply `supabase/migrations/20261118000000_heyrin_chat_quota.sql` to the intended Supabase project; the protected RPC atomically enforces eight requests per IP per rolling hour and a global ceiling of 100 requests per rolling day (additional abuse and provider account budget controls remain advisable).
+2. Deploy `supabase/functions/heyrin-chat/index.ts` with `verify_jwt = false` as specified in `supabase/config.toml`. Review allowed origins and public API abuse safeguards first.
+3. Set **server-only** Edge Function secrets `OPENAI_API_KEY`, `HEYREN_CHAT_HASH_SALT` and optionally `HEYREN_CHAT_ALLOWED_ORIGINS` (comma-separated; defaults to the production site) and `HEYREN_CHAT_MODEL`. The existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` server secrets must also be present. Never put the OpenAI or service-role key into a `VITE_` variable.
+4. Ensure the client build has the *public* Supabase project URL and browser key (`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, or the corresponding mapped Vercel `NEXT_PUBLIC_` values). Set `VITE_HEYRIN_CHAT_ENABLED=true` **only** after the function is tested and spending limits are approved. Otherwise the chat panel explicitly says live AI is not connected.
+5. Separately, `VITE_HEYRIN_CONTACT_ENABLED=true` opts the contact form into the existing `contact-inquiry` function. Without this flag, the form now prepares a user-confirmed email draft and preserves the entered data; it never claims the mail has been sent.
+
+Local verification (no external AI requests):
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+npm run test:e2e
+node scripts/verify-chat-gateway.mjs
+```
+
+Additional opt-in Playwright tests live in `tests/chat-live.spec.ts` and `tests/contact-live.spec.ts`. They must be run with temporary, dummy build-time public configuration plus request-route mocks; see the test file headers. They never require real provider credentials.
+
+Known launch prerequisites: provider account/key and budget approval, SQL migration/function deployment, backend live smoke test, rate-limit/abuse review, mobile Safari and Android real-device checks, GPU/memory profiling, and actual LCP/INP/CLS field measurements. This local work did not push commits or redeploy production.

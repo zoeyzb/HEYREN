@@ -24,14 +24,17 @@ const EMPTY: FormData = {
 
 const CONTACT_EMAIL = 'sierra@recoverrevenue.company';
 
-type Status = 'idle' | 'loading' | 'success' | 'error';
+type Status = 'idle' | 'loading' | 'success' | 'handoff' | 'error';
+const PUBLIC_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const PUBLIC_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const DIRECT_CONTACT_ENABLED = import.meta.env.VITE_HEYRIN_CONTACT_ENABLED === 'true' && Boolean(PUBLIC_URL && PUBLIC_KEY);
 
 export function Contact() {
   const { ref, visible } = useFadeUp<HTMLDivElement>();
   const [data, setData] = useState<FormData>(EMPTY);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [emailConfigured, setEmailConfigured] = useState(true);
+  const [draftHref, setDraftHref] = useState('');
 
   const update = (field: keyof FormData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -67,7 +70,33 @@ export function Contact() {
       return;
     }
 
-    // No backend needed: open the visitor's email app with the inquiry pre-filled.
+    // Only claim an inquiry was received after the existing server function returns success.
+    if (DIRECT_CONTACT_ENABLED) {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15_000);
+      try {
+        const response = await fetch(`${PUBLIC_URL.replace(/\/$/, '')}/functions/v1/contact-inquiry`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: PUBLIC_KEY },
+          body: JSON.stringify(data),
+          signal: controller.signal,
+        });
+        const result: { success?: boolean; error?: string } = await response.json();
+        if (!response.ok || result.success !== true) throw new Error(result.error || 'Unable to submit inquiry.');
+        setStatus('success');
+        setData(EMPTY);
+      } catch (cause) {
+        setStatus('error');
+        setErrorMsg(controller.signal.aborted ? 'The request timed out. Please try again.' :
+          cause instanceof Error ? cause.message : 'Unable to send your inquiry. Please try again.');
+      } finally {
+        window.clearTimeout(timeout);
+      }
+      return;
+    }
+
+    // A browser cannot confirm that an external email draft has been sent.
+    // Prepare it without clearing the form or claiming delivery.
     const lines = [
       `Name: ${data.name.trim()}`,
       `Email: ${data.email.trim()}`,
@@ -79,11 +108,8 @@ export function Contact() {
     ];
     const body = lines.filter((l): l is string => l !== null).join('\n');
     const subject = `Heyrin inquiry from ${data.name.trim()}`;
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-    setStatus('success');
-    setEmailConfigured(true);
-    setData(EMPTY);
+    setDraftHref(`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    setStatus('handoff');
   };
 
   useEffect(() => {
@@ -140,27 +166,21 @@ export function Contact() {
               <div className="absolute top-0 left-0 w-16 h-px bg-gradient-to-r from-lime/40 to-transparent" />
 
               {status === 'success' ? (
-                <div className="py-12 text-center">
+                <div className="py-12 text-center" role="status">
                   <div className="w-14 h-14 rounded-full bg-lime/10 border border-lime/30 flex items-center justify-center mx-auto mb-4">
                     <CheckCircle2 size={24} className="text-lime" />
                   </div>
-                  <h3 className="text-lg font-medium text-soft mb-2">Almost there.</h3>
-                  <p className="text-sm text-silver/70 max-w-xs mx-auto">
-                    {emailConfigured
-                      ? "Your email app should open with your inquiry ready to send. Just press send and we'll be in touch soon."
-                      : "Your inquiry has been recorded. We'll be in touch soon."}
-                  </p>
-                  {!emailConfigured && (
-                    <p className="text-[10px] font-mono text-silver/40 mt-4">
-                      Email delivery is being configured — your inquiry is safely stored.
-                    </p>
-                  )}
-                  <button
-                    onClick={() => setStatus('idle')}
-                    className="mt-6 text-xs text-silver/50 hover:text-silver transition-colors"
-                  >
-                    Send another inquiry
-                  </button>
+                  <h3 className="text-lg font-medium text-soft mb-2">Inquiry received.</h3>
+                  <p className="text-sm text-silver/70 max-w-xs mx-auto">Your inquiry has been recorded. This does not confirm an email notification was delivered.</p>
+                  <button onClick={() => setStatus('idle')} className="mt-6 text-xs text-silver/50 hover:text-silver transition-colors">Send another inquiry</button>
+                </div>
+              ) : status === 'handoff' ? (
+                <div className="py-12 text-center">
+                  <div className="w-14 h-14 rounded-full bg-lime/10 border border-lime/30 flex items-center justify-center mx-auto mb-4"><Mail size={24} className="text-lime"/></div>
+                  <h3 className="text-lg font-medium text-soft mb-2">Email draft ready</h3>
+                  <p className="text-sm text-silver/70 max-w-xs mx-auto">Your inquiry has not been sent yet. Open the prepared draft in your email app, then press Send. Your details are kept here if you need to edit them.</p>
+                  <a href={draftHref} className="mt-6 mx-auto flex w-fit min-h-11 items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-semibold text-ink-base">Open email draft <ArrowUpRight size={16}/></a>
+                  <button type="button" onClick={() => setStatus('idle')} className="mt-5 text-xs text-silver hover:text-lime transition-colors">Edit inquiry</button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">

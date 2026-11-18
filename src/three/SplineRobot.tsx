@@ -1,19 +1,21 @@
 import { useEffect, useRef } from 'react';
 import type { Application } from '@splinetool/runtime';
 
-const SCENE = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
+const SCENE = '/scene.splinecode'; // Vendored from the site's original Spline scene; only fetched on 3D opt-in.
 
-interface Props { active: boolean; onReady?: () => void; onError?: () => void; onContextLost?: () => void; }
+interface Props { active: boolean; speaking?: boolean; onReady?: () => void; onError?: () => void; onContextLost?: () => void; }
 
 /** One owner for the rig: Spline renders the original asset without its authored
  * startup events; rotations below articulate it without translating joint anchors. */
-export function SplineRobot({ active, onReady, onError, onContextLost }: Props) {
+export function SplineRobot({ active, speaking = false, onReady, onError, onContextLost }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
+  const speakingRef = useRef(speaking);
   const readyRef = useRef(onReady);
   const errorRef = useRef(onError);
   const lostRef = useRef(onContextLost);
   activeRef.current = active;
+  speakingRef.current = speaking;
   readyRef.current = onReady;
   errorRef.current = onError;
   lostRef.current = onContextLost;
@@ -48,7 +50,7 @@ export function SplineRobot({ active, onReady, onError, onContextLost }: Props) 
       const scenePromise = fetch(SCENE, { signal: abort.signal });
       const [{ Application }, response] = await Promise.all([runtimePromise, scenePromise]);
       if (disposed) return;
-      app = new Application(canvas, { renderOnDemand: false });
+      app = new Application(canvas, { renderer: 'webgl', renderMode: 'continuous', htmlContentMode: 'none' });
       if (!response.ok) throw new Error('Robot scene unavailable');
       const scene = await response.arrayBuffer();
       if (disposed) return;
@@ -96,7 +98,8 @@ export function SplineRobot({ active, onReady, onError, onContextLost }: Props) 
             const { object, role, x, y, z } = joint;
             // Small phase-offset motion: shoulder breathes, elbow flexes, wrist trails behind.
             const sway = moving ? Math.sin(elapsed * 1.02 - (role === 'wrist' ? 1.1 : role === 'forearm' ? 0.65 : role === 'elbow' ? 0.35 : 0)) : 0;
-            const targetX = x + (role === 'elbow' ? sway * 0.16 : role === 'wrist' ? sway * 0.14 : role === 'arm' ? sway * 0.08 : 0);
+            const intensity = speakingRef.current ? 1.45 : 1;
+            const targetX = x + (role === 'elbow' ? sway * 0.16 * intensity : role === 'wrist' ? sway * 0.14 * intensity : role === 'arm' ? sway * 0.08 * intensity : 0);
             const targetY = y;
             const targetZ = z + (role === 'Hand LEFT' ? sway * 0.05 : 0);
             object.rotation.x += (targetX - object.rotation.x) * blend;
@@ -105,7 +108,8 @@ export function SplineRobot({ active, onReady, onError, onContextLost }: Props) 
           }
           if (head && headPose) {
             head.rotation.y += (headPose.y + (moving ? pointerX * 0.40 : 0) - head.rotation.y) * blend;
-            head.rotation.x += (headPose.x + (moving ? pointerY * 0.22 : 0) - head.rotation.x) * blend;
+            const speakingNod = moving && speakingRef.current ? Math.sin(elapsed * 2.2) * 0.035 : 0;
+            head.rotation.x += (headPose.x + (moving ? pointerY * 0.22 : 0) + speakingNod - head.rotation.x) * blend;
           }
         }
         frame = requestAnimationFrame(animate);
@@ -115,9 +119,9 @@ export function SplineRobot({ active, onReady, onError, onContextLost }: Props) 
         readyRef.current?.();
         animate(now);
       });
-    })().catch(() => {
-      // Keep the existing static preview visible if the scene cannot be loaded.
-      if (!disposed) { app?.dispose(); errorRef.current?.(); }
+    })().catch((error: unknown) => {
+      // Surface the actual failure for diagnostics; the hero keeps its animated fallback.
+      if (!disposed) { console.warn('[Heyrin] Spline robot unavailable:', error); app?.dispose(); errorRef.current?.(); }
     });
 
     return () => {

@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { PhoneIncoming, Scan, MessageCircleMore, CalendarCheck2, ArrowUpRight } from 'lucide-react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-gsap.registerPlugin(ScrollTrigger);
 const stages=[
  {icon:PhoneIncoming,label:'The signal',title:'A call comes in.',text:'A customer reaches your number. Heyrin answers with your business context, ready to help.'},
  {icon:Scan,label:'The understanding',title:'Intent takes shape.',text:'The conversation identifies why they called and gathers relevant information.'},
@@ -12,23 +9,59 @@ const stages=[
 export function HowItWorks(){
  const ref=useRef<HTMLElement>(null);
  const [active,setActive]=useState(0);
- useEffect(()=>{
-   const section=ref.current;
-   if(!section) return;
-   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-   const ctx=gsap.context(()=>{
-      gsap.fromTo('.rin-journey-marker',{scale:.82,opacity:.55},{scale:1,opacity:1,stagger:.16,duration:.55,ease:'power2.out',scrollTrigger:{trigger:section,start:'top 70%',once:true}});
-      ScrollTrigger.create({trigger:section,start:'top 60%',end:'bottom 45%',onUpdate:self=>setActive(Math.min(3,Math.floor(self.progress*4)))});
-      const mobile = window.matchMedia('(max-width: 650px)').matches;
-      gsap.fromTo('.rin-journey-progress',mobile?{scaleY:0}:{scaleX:0},mobile?{scaleY:1,ease:'none',scrollTrigger:{trigger:section,start:'top 60%',end:'bottom 45%',scrub:true}}:{scaleX:1,ease:'none',scrollTrigger:{trigger:section,start:'top 60%',end:'bottom 45%',scrub:true}});
-   },section);
-   return()=>ctx.revert();
- },[]);
+ const progressRef = useRef<HTMLSpanElement>(null);
+ useEffect(() => {
+   const section = ref.current;
+   const bar = progressRef.current;
+   if (!section || !bar || typeof IntersectionObserver === 'undefined') return;
+
+   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+   let frame = 0;
+   let lastStage = -1;
+   const update = () => {
+     frame = 0;
+     const { top, bottom } = section.getBoundingClientRect();
+     const height = window.innerHeight;
+     const progress = Math.max(0, Math.min(1, (height * 0.6 - top) / (bottom - top + height * 0.15)));
+     bar.style.setProperty('--journey-progress', String(progress));
+     const nextStage = Math.min(3, Math.floor(progress * 4));
+     if (nextStage !== lastStage) {
+       lastStage = nextStage;
+       setActive(nextStage);
+     }
+   };
+   const schedule = () => {
+     if (!frame) frame = window.requestAnimationFrame(update);
+   };
+   let visible = false;
+   const sync = () => {
+     window.removeEventListener('scroll', schedule);
+     window.removeEventListener('resize', schedule);
+     window.cancelAnimationFrame(frame);
+     frame = 0;
+     if (!visible || motion.matches) return;
+     window.addEventListener('scroll', schedule, { passive: true });
+     window.addEventListener('resize', schedule);
+     schedule();
+   };
+   const observer = new IntersectionObserver(([entry]) => {
+     visible = entry.isIntersecting;
+     sync();
+   });
+   observer.observe(section);
+   motion.addEventListener('change', sync);
+   return () => {
+     visible = false;
+     sync();
+     observer.disconnect();
+     motion.removeEventListener('change', sync);
+   };
+ }, []);
  return <section ref={ref} id="how-it-works" className="rin-section rin-journey">
    <div className="rin-container">
      <div className="rin-overline"><span>01 / HOW IT WORKS</span><span>FROM RING TO RESULT</span></div>
      <div className="rin-heading-row"><h2>One call.<br/><em>Four quiet moves.</em></h2><p>What feels effortless on the caller’s side is a carefully designed sequence underneath.</p></div>
-     <div className="rin-journey-track"><div className="rin-journey-line"><span className="rin-journey-progress"/></div>
+     <div className="rin-journey-track"><div className="rin-journey-line"><span ref={progressRef} className="rin-journey-progress"/></div>
        {stages.map((step,i)=>{const Icon=step.icon;return <button key={step.label} type="button" onClick={()=>setActive(i)} className={`rin-journey-stage ${active===i?'is-active':''}`} aria-pressed={active===i}>
          <div className="rin-journey-marker"><Icon size={22}/></div><span className="rin-mini-label">{String(i+1).padStart(2,'0')} / {step.label}</span><strong>{step.title}</strong><p>{step.text}</p>
        </button>;})}
