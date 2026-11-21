@@ -127,7 +127,7 @@ export function HeroRobot() {
         showArmImage();
         return;
       }
-      if (document.readyState !== 'complete') return;
+      if (!poster.complete || !poster.naturalWidth) return;
       if (!arms.hasAttribute('src')) arms.src = '/heyrin-arms.mp4';
       arms.muted = true;
       if (arms.error) showArmImage();
@@ -144,7 +144,10 @@ export function HeroRobot() {
       arms.classList.remove('is-playing');
       showArmImage();
     };
-    const onPosterLoad = () => loadAtlas();
+    const onPosterLoad = () => {
+      loadAtlas();
+      syncArms();
+    };
     const sync = () => {
       hero?.classList.toggle('is-in-view', inView);
       syncArms();
