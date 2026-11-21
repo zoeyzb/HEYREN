@@ -12,6 +12,7 @@ type OrientationWithPermission = typeof DeviceOrientationEvent & {
 export function HeroRobot() {
   const sceneRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
+  const armsRef = useRef<HTMLVideoElement>(null);
   const posterRef = useRef<HTMLImageElement>(null);
   const greetRef = useRef<() => void>(() => {});
 
@@ -19,7 +20,8 @@ export function HeroRobot() {
     const scene = sceneRef.current;
     const head = headRef.current;
     const poster = posterRef.current;
-    if (!scene || !head || !poster) return;
+    const arms = armsRef.current;
+    if (!scene || !head || !poster || !arms) return;
 
     const hero = scene.closest('.hero-shell');
     const phone = window.matchMedia('(max-width: 767px)');
@@ -106,9 +108,26 @@ export function HeroRobot() {
       image.onerror = () => { if (atlas === image) atlas = undefined; };
       image.src = url;
     };
+    const syncArms = () => {
+      if (!visible() || connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? '')) {
+        arms.pause();
+        return;
+      }
+      if (document.readyState !== 'complete') return;
+      const source = phone.matches ? '/heyrin-arms-mobile.mp4' : '/heyrin-arms.mp4';
+      if (arms.getAttribute('src') !== source) {
+        arms.classList.remove('is-playing');
+        arms.src = source;
+      }
+      arms.muted = true;
+      if (arms.paused && !arms.error) void arms.play().catch(() => {});
+    };
+    const showArms = () => arms.classList.add('is-playing');
+    const hideArms = () => arms.classList.remove('is-playing');
     const onPosterLoad = () => loadAtlas();
     const sync = () => {
       hero?.classList.toggle('is-in-view', inView);
+      syncArms();
       if (!visible()) reset();
       else loadAtlas();
     };
@@ -147,6 +166,7 @@ export function HeroRobot() {
     };
     greetRef.current = () => {
       if (!visible()) return;
+      syncArms();
       if (ready) {
         nodAt = performance.now();
         schedule();
@@ -168,6 +188,9 @@ export function HeroRobot() {
     }, { threshold: .02 }) : undefined;
     observer?.observe(scene);
     scene.classList.add('has-robot-interaction');
+    window.addEventListener('load', syncArms);
+    arms.addEventListener('playing', showArms);
+    arms.addEventListener('error', hideArms);
     poster.addEventListener('load', onPosterLoad);
     window.addEventListener('pointermove', onPointer, { passive: true });
     document.documentElement.addEventListener('pointerleave', reset);
@@ -187,6 +210,10 @@ export function HeroRobot() {
       greetRef.current = () => {};
       scene.classList.remove('has-robot-interaction', 'is-gaze-ready');
       head.style.backgroundImage = '';
+      window.removeEventListener('load', syncArms);
+      arms.removeEventListener('playing', showArms);
+      arms.removeEventListener('error', hideArms);
+      arms.pause();
       poster.removeEventListener('load', onPosterLoad);
       window.removeEventListener('pointermove', onPointer);
       document.documentElement.removeEventListener('pointerleave', reset);
@@ -207,6 +234,7 @@ export function HeroRobot() {
           <source media="(max-width: 767px)" srcSet="/heyrin-lit-mobile.webp" />
           <img ref={posterRef} className="hero-robot-body" src="/heyrin-lit-desktop.webp" alt="" width={1152} height={900} fetchPriority="high" />
         </picture>
+        <video ref={armsRef} className="hero-robot-arms" muted playsInline loop preload="none" disablePictureInPicture />
         <div ref={headRef} className="hero-robot-head" />
       </div>
       <button type="button" className="hero-robot-greet" aria-label="Say hello to Heyrin's robot" onClick={() => greetRef.current()} />

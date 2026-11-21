@@ -90,6 +90,9 @@ body { overflow-x: hidden; }
   transform: translate(-50%, -50%);
 }
 .hero-robot-stage picture, .hero-robot-body { display: block; width: 100%; height: 100%; }
+.hero-robot-arms { position: absolute; left: 0; top: 36%; width: 100%; height: 64%; opacity: 0; pointer-events: none; }
+.hero-robot-arms.is-playing { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .hero-robot-arms { display: none; } }
 .hero-robot-head {
   display: none;
   position: absolute;
