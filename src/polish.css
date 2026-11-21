@@ -131,7 +131,7 @@ body { overflow-x: hidden; }
   .hero-heading { font-size: clamp(2.6rem, 13vw, 3.35rem); }
 }
 @media (min-width: 768px) and (max-width: 1199px) {
-  .hero-robot-greet { height: 25%; }
+  .hero-robot-greet { height: 17%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-robot-greet, .hero-robot-motion { display: none; }
