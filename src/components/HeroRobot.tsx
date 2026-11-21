@@ -110,7 +110,7 @@ export function HeroRobot() {
       image.onerror = () => { if (atlas === image) atlas = undefined; };
       image.src = url;
     };
-    const useArmImage = () => {
+    const showArmImage = () => {
       if (!visible() || disposed) return;
       if (!armImage.hasAttribute('src')) armImage.src = '/heyrin-arms-mobile.webp';
       armImage.classList.add('is-playing');
@@ -124,15 +124,15 @@ export function HeroRobot() {
       if (phone.matches) {
         arms.pause();
         arms.classList.remove('is-playing');
-        useArmImage();
+        showArmImage();
         return;
       }
       if (document.readyState !== 'complete') return;
       if (!arms.hasAttribute('src')) arms.src = '/heyrin-arms.mp4';
       arms.muted = true;
-      if (arms.error) useArmImage();
+      if (arms.error) showArmImage();
       else if (arms.paused) void arms.play().catch(error => {
-        if (error.name !== 'AbortError') useArmImage();
+        if (error.name !== 'AbortError') showArmImage();
       });
     };
     const showArms = () => {
@@ -142,7 +142,7 @@ export function HeroRobot() {
     };
     const hideArms = () => {
       arms.classList.remove('is-playing');
-      useArmImage();
+      showArmImage();
     };
     const onPosterLoad = () => loadAtlas();
     const sync = () => {
