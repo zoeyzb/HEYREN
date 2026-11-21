@@ -56,7 +56,7 @@ The 3D character and conversation playback are presentation/demo features. Live 
 
 ## November 18, 2026: responsive robot + opt-in chat integration
 
-The homepage uses a six-second loop rendered from the original Spline robot, with a matching poster for the first paint. The robot leans toward a desktop pointer and responds to a tap, click, or keyboard activation. Phones receive a smaller clip. Playback pauses outside the viewport and in background tabs, and the poster covers reduced-motion, data-saving and playback failure cases.
+The hero uses a static WebP rendered from the original Spline model and a responsive pose sheet for the helmet. Pointer, touch and supported device tilt affect the helmet only. On iOS, tapping the robot can enable tilt on HTTPS. The hero displays the complete neutral pose before the sheet loads and when reduced motion is enabled.
 
 The original prerecorded conversation showcase is still a demo, **not** a real phone agent. A mobile-friendly AI chat UI and Supabase Edge Function are now implemented **locally**, behind an explicit production opt-in. No paid AI key is bundled into the browser, and neither the chat endpoint nor its quota migration has been deployed as part of this work.
 

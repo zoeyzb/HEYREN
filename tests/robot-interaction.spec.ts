@@ -1,51 +1,60 @@
 import { devices, expect, test } from '@playwright/test';
 
-test('desktop hero robot responds smoothly to pointer movement', async ({ page }) => {
+test('desktop pointer turns only the helmet and it returns to center', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
-  const scene = page.locator('.hero-robot-visual');
-  await expect(scene).toBeVisible();
-  const original = await scene.evaluate(el => getComputedStyle(el).transform);
-  await page.mouse.move(1380, 620);
-  await expect.poll(() => scene.evaluate(el => getComputedStyle(el).transform), { timeout: 3_000 }).not.toBe(original);
+  const scene = page.locator('.hero-scene');
+  const head = scene.locator('.hero-robot-head');
+  const body = scene.locator('.hero-robot-body');
+  await expect(scene).toHaveClass(/is-gaze-ready/);
+  const before = await body.boundingBox();
+  await page.mouse.move(1400, 480);
+  await expect.poll(() => head.evaluate(el => getComputedStyle(el).backgroundPosition)).not.toBe('50% 50%');
+  expect(await body.boundingBox()).toEqual(before);
   await page.locator('html').dispatchEvent('pointerleave');
-  await expect.poll(() => scene.evaluate(el => getComputedStyle(el).transform)).toBe('none');
-  await expect(page.getByRole('link', { name: 'Hear Heyrin in Action' })).toBeVisible();
+  await expect.poll(() => head.evaluate(el => getComputedStyle(el).backgroundPosition)).toBe('50% 50%');
 });
 
-test('reduced-motion keeps the hero robot still even after pointer movement', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
-  const scene = page.locator('.hero-robot-visual');
-  const original = await scene.evaluate(el => getComputedStyle(el).transform);
-  await page.mouse.move(1380, 620);
-  await page.waitForTimeout(450);
-  expect(await scene.evaluate(el => getComputedStyle(el).transform)).toBe(original);
-});
-
-test('the robot responds to a phone tap without swapping views or loading 3D', async ({ browser, baseURL }) => {
+test('a tap and phone tilt rotate the helmet while the body stays anchored', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ ...devices['iPhone 14'], baseURL });
   try {
     const page = await context.newPage();
-    const heavyRequests: string[] = [];
-    page.on('request', request => {
-      if (/spline|three|robot-clean\.mp4/i.test(request.url())) heavyRequests.push(request.url());
+    await page.addInitScript(() => {
+      Object.defineProperty(window.DeviceOrientationEvent, 'requestPermission', {
+        configurable: true,
+        value: async () => 'granted',
+      });
     });
+    const requests: string[] = [];
+    page.on('request', request => requests.push(new URL(request.url()).pathname));
     await page.goto('/');
     const scene = page.locator('.hero-scene');
-    await expect(scene).toHaveClass(/is-playing/);
-    await expect(scene.locator('video')).toHaveAttribute('src', '/heyrin-robot-clean-sm.mp4');
+    const head = scene.locator('.hero-robot-head');
+    const body = scene.locator('.hero-robot-body');
+    await expect(scene).toHaveClass(/is-gaze-ready/);
+    const before = await body.boundingBox();
+    await expect(head).toHaveCSS('background-position', '50% 50%');
     await page.getByRole('button', { name: "Say hello to Heyrin's robot" }).tap();
-    await expect.poll(() => scene.locator('.hero-static-preview').evaluate(element =>
-      element.getAnimations().some(animation => animation.playState === 'running'))).toBe(true);
-    await expect(page.getByRole('button', { name: /animated view|interactive 3d/i })).toHaveCount(0);
-    await expect(scene.locator('canvas')).toHaveCount(0);
-    expect(heavyRequests).toEqual([]);
+    await expect.poll(() => head.evaluate(el => getComputedStyle(el).backgroundPosition)).not.toBe('50% 50%');
+    await expect(head).toHaveCSS('background-position', '50% 50%');
+
+    await page.evaluate(() => {
+      for (const [beta, gamma] of [[35, 3], [36, 3.4]]) {
+        window.dispatchEvent(Object.assign(new Event('deviceorientation'), { beta, gamma }));
+      }
+    });
+    await expect(head).toHaveCSS('background-position', '50% 50%');
+    await page.evaluate(() => window.dispatchEvent(Object.assign(new Event('deviceorientation'), { beta: 52, gamma: 18 })));
+    await expect.poll(() => head.evaluate(el => {
+      const [x, y] = getComputedStyle(el).backgroundPosition.split(' ').map(parseFloat);
+      return Math.abs(x - 50) > 15 && Math.abs(y - 50) > 15;
+    })).toBe(true);
+    expect(await body.boundingBox()).toEqual(before);
+    expect(requests).toContain('/heyrin-gaze-mobile.webp');
+    expect(requests.filter(path => /spline|three|heyrin-(gaze|lit)-desktop|\.mp4/i.test(path))).toEqual([]);
+
     await page.getByRole('link', { name: 'Hear Heyrin in Action' }).click();
-    await expect(scene.locator('video')).toHaveJSProperty('paused', true);
-    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    await expect(scene.locator('video')).toHaveJSProperty('paused', false);
+    await expect(head).toHaveCSS('background-position', '50% 50%');
   } finally {
     await context.close();
   }

@@ -28,12 +28,13 @@ test('all major website sections remain inside common phone, tablet and desktop 
   }
 });
 
-test('robot clip makes progress in a visible desktop tab and mobile tab', async ({ page }) => {
-  for (const width of [390, 1440]) {
+test('the robot loads the responsive poster and head poses', async ({ page }) => {
+  for (const [width, variant] of [[390, 'mobile'], [1440, 'desktop']] as const) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
-    const video = page.locator('video.hero-robot-motion');
-    await expect.poll(() => video.evaluate(element => (element as HTMLVideoElement).currentTime), { timeout: 8_000 }).toBeGreaterThan(0.25);
-    await expect(page.locator('.hero-scene')).toHaveClass(/is-playing/);
+    await expect.poll(() => page.locator('.hero-robot-body').evaluate(image =>
+      (image as HTMLImageElement).currentSrc)).toContain(`heyrin-lit-${variant}.webp`);
+    await expect.poll(() => page.locator('.hero-robot-head').evaluate(head =>
+      getComputedStyle(head).backgroundImage)).toContain(`heyrin-gaze-${variant}.webp`);
   }
 });

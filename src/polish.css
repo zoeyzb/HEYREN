@@ -79,23 +79,39 @@ body { overflow-x: hidden; }
   .rin-review-grid .rin-review-card { flex: 0 0 84%; scroll-snap-align: center; min-height: 0; }
 }
 
-/* The still and the first frame share the same crop on every screen. */
-.hero-scene { mix-blend-mode: screen; pointer-events: none; }
-.hero-robot-visual {
+/* The pose sheet overlays just the helmet and neck on the first-paint image. */
+.hero-scene { container-type: size; mix-blend-mode: screen; pointer-events: none; }
+.hero-robot-stage {
   position: absolute;
-  inset: 0;
-  transform-origin: 50% 64%;
-  transition: transform 320ms cubic-bezier(.2,.7,.25,1);
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 128cqh);
+  height: max(78.125cqw, 100cqh);
+  transform: translate(-50%, -50%);
 }
-.hero-static-preview { position: absolute; inset: 0; transform-origin: 50% 64%; }
-.hero-static-preview picture, .hero-static-preview-image { display: block; width: 100%; height: 100%; }
-.hero-static-preview-image { object-fit: cover; object-position: center; }
-.hero-robot-motion { position: absolute; inset: 0; opacity: 0; }
-.hero-robot-motion::-webkit-media-controls { display: none; }
-.hero-scene.is-playing .hero-robot-motion { opacity: 1; }
-.hero-scene.is-playing picture { visibility: hidden; }
+.hero-robot-stage picture, .hero-robot-body { display: block; width: 100%; height: 100%; }
+.hero-robot-head {
+  display: none;
+  position: absolute;
+  left: 38.8889%;
+  top: 8%;
+  width: 22.2222%;
+  height: 30.2222%;
+  background-size: 1300% 500%;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  mask-image: linear-gradient(180deg, transparent, #000 10% 89%, transparent);
+}
+.hero-scene.is-gaze-ready .hero-robot-head { display: block; }
+.hero-shell .hero-orbit-glow {
+  border-radius: 0;
+  background: radial-gradient(ellipse 52% 48% at 52% 46%, #703aff4d, #6025bb24 55%, transparent 100%),
+    radial-gradient(ellipse 48% 45% at 40% 55%, #b9ff322b, transparent 100%);
+  filter: none;
+  animation: none;
+}
 
-/* Only the robot's head and upper torso receive taps. Keep the navigation and hero links clear. */
+ /* Keep the robot's controls clear of navigation and hero links. */
 .hero-robot-greet {
   pointer-events: auto;
   position: absolute;
@@ -120,13 +136,13 @@ body { overflow-x: hidden; }
     right: 0;
     width: 100%;
     min-width: 0;
-    height: 20.5rem;
+    height: clamp(16rem, 36svh, 20.5rem);
     opacity: 1;
     mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%);
   }
-  .hero-content { padding-top: 22.5rem; padding-bottom: 5.5rem; align-items: flex-start; }
+  .hero-content { padding-top: clamp(18.25rem, 40svh, 22.5rem); padding-bottom: 5.5rem; align-items: flex-start; }
   .hero-vignette { background: linear-gradient(180deg, transparent 42%, rgba(5,6,7,.5) 58%, #050607 100%); }
-  .hero-orbit-glow { top: 1.5rem; right: -25%; height: 20rem; width: 20rem; }
+  .hero-orbit-glow { top: 1.5rem; right: -10%; height: 20rem; width: 120%; }
   .hero-meta { margin-top: 2.25rem; flex-wrap: wrap; }
   .hero-heading { font-size: clamp(2.6rem, 13vw, 3.35rem); }
 }
@@ -134,16 +150,14 @@ body { overflow-x: hidden; }
   .hero-robot-greet { height: 17%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-robot-greet, .hero-robot-motion { display: none; }
-  .hero-scene.is-playing picture { visibility: visible; }
-  .hero-robot-visual { transition: none; transform: none !important; }
+  .hero-robot-greet, .hero-scene.is-gaze-ready .hero-robot-head { display: none; }
 }
 
 .hero-shell:not(.is-in-view) .hero-orbit-glow,
 .hero-shell:not(.is-in-view) .animate-pulse-slow { animation-play-state: paused; }
 
-/* The accent follows actual prerecorded audio playback. */
-.hero-scene[data-voice-state="speaking"] { filter: saturate(1.17) brightness(1.06); }
+/* The accent follows prerecorded audio without moving the silhouette. */
+.hero-scene[data-voice-state="speaking"] { filter: saturate(1.22) brightness(1.08); }
 @media (prefers-reduced-motion: no-preference) {
   .hero-scene { transition: filter 240ms ease-out; }
 }
