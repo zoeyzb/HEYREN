@@ -32,7 +32,7 @@ test('reduced motion keeps the robot visible without downloading the pose sheet'
 
 test('a failed pose sheet leaves the neutral robot and page controls available', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.route('**/heyrin-gaze-*.webp', route => route.fulfill({ status: 503, body: '' }));
+  await page.route(/\/heyrin-gaze-[^?]+\.webp(?:\?|$)/, route => route.fulfill({ status: 503, body: '' }));
   const blocked = page.waitForResponse(response => response.url().includes('heyrin-gaze-') && response.status() === 503);
   await page.goto('/');
   await blocked;

@@ -217,7 +217,17 @@ body { overflow-x: hidden; }
 .hero-benefits { display: flex; flex-wrap: wrap; gap: .35rem 1.15rem; margin-top: 1rem; color: #c3c8c4; font-size: .95rem; }
 .hero-benefits li { display: flex; align-items: center; gap: .5rem; }
 .hero-benefits li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #a0bd63; }
-.hero-robot-stage { filter: brightness(.84) contrast(1.08) saturate(1.12); }
+/* Thin orbital accents frame the torso without covering the visor. */
+.hero-robot-orbits { position: absolute; inset: 0; pointer-events: none; }
+.hero-robot-orbits span { position: absolute; left: 13%; top: 39%; width: 74%; height: 23%; border: 1px solid; border-radius: 50%; }
+.hero-robot-orbits span::after { content: ''; position: absolute; width: clamp(4px, .65cqw, 8px); aspect-ratio: 1; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+.hero-robot-orbits .hero-robot-orbit-lime { color: #a6d4489c; border-color: #a6d44855; transform: rotate(-5deg); }
+.hero-robot-orbits .hero-robot-orbit-lime::after { left: 15%; top: 15%; }
+.hero-robot-orbits .hero-robot-orbit-violet { color: #a16bff9c; border-color: #a16bff48; transform: rotate(-19deg) scaleX(1.08); }
+.hero-robot-orbits .hero-robot-orbit-violet::after { right: 13%; bottom: 14%; }
+@media (max-width: 767px) {
+  .hero-robot-orbits { opacity: .7; }
+}
 
 @media (max-width: 767px) {
   .hero-benefits { flex-direction: column; gap: .25rem; }
