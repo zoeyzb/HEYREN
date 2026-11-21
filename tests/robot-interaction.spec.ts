@@ -34,8 +34,17 @@ test('a tap and phone tilt rotate the helmet while the body stays anchored', asy
     await expect(scene).toHaveClass(/is-gaze-ready/);
     const before = await body.boundingBox();
     await expect(head).toHaveCSS('background-position', '50% 50%');
+    const turned = head.evaluate(element => new Promise<void>(resolve => {
+      const observer = new MutationObserver(() => {
+        if (getComputedStyle(element).backgroundPosition !== '50% 50%') {
+          observer.disconnect();
+          resolve();
+        }
+      });
+      observer.observe(element, { attributes: true, attributeFilter: ['style'] });
+    }));
     await page.getByRole('button', { name: "Say hello to Heyrin's robot" }).tap();
-    await expect.poll(() => head.evaluate(el => getComputedStyle(el).backgroundPosition)).not.toBe('50% 50%');
+    await turned;
     await expect(head).toHaveCSS('background-position', '50% 50%');
 
     await page.evaluate(() => {
