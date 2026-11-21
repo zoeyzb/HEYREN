@@ -108,8 +108,8 @@ body { overflow-x: hidden; }
 .hero-scene.is-gaze-ready .hero-robot-head { display: block; }
 .hero-shell .hero-orbit-glow {
   border-radius: 0;
-  background: radial-gradient(ellipse 52% 48% at 52% 46%, #703aff4d, #6025bb24 55%, transparent 100%),
-    radial-gradient(ellipse 48% 45% at 40% 55%, #b9ff322b, transparent 100%);
+  background: radial-gradient(ellipse 46% 58% at 70% 47%, #6b35bd38, #47277217 58%, transparent 100%),
+    radial-gradient(ellipse 42% 42% at 28% 59%, #82b82e24, transparent 100%);
   filter: none;
   animation: none;
 }
@@ -217,9 +217,14 @@ body { overflow-x: hidden; }
 .hero-benefits { display: flex; flex-wrap: wrap; gap: .35rem 1.15rem; margin-top: 1rem; color: #c3c8c4; font-size: .95rem; }
 .hero-benefits li { display: flex; align-items: center; gap: .5rem; }
 .hero-benefits li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #a0bd63; }
-/* Thin orbital accents frame the torso without covering the visor. */
-.hero-robot-orbits { position: absolute; inset: 0; pointer-events: none; }
-.hero-robot-orbits span { position: absolute; left: 13%; top: 39%; width: 74%; height: 23%; border: 1px solid; border-radius: 50%; }
+/* Fade the orbital accents through the center to keep the graphite chest clear. */
+.hero-robot-orbits {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mask-image: linear-gradient(90deg, transparent 13%, #000 23%, #000 32%, transparent 44% 57%, #000 69%, #000 77%, transparent 87%);
+}
+.hero-robot-orbits span { position: absolute; left: 18%; top: 42%; width: 64%; height: 21%; border: 1px solid; border-radius: 50%; }
 .hero-robot-orbits span::after { content: ''; position: absolute; width: clamp(4px, .65cqw, 8px); aspect-ratio: 1; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
 .hero-robot-orbits .hero-robot-orbit-lime { color: #a6d4489c; border-color: #a6d44855; transform: rotate(-5deg); }
 .hero-robot-orbits .hero-robot-orbit-lime::after { left: 15%; top: 15%; }

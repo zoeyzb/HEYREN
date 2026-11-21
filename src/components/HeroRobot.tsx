@@ -91,7 +91,7 @@ export function HeroRobot() {
     const loadAtlas = (onDemand = false) => {
       if (!visible() || (!onDemand && (!poster.complete || !poster.naturalWidth || connection?.saveData ||
           /(^|-)2g$/.test(connection?.effectiveType ?? '')))) return;
-      const url = phone.matches ? '/heyrin-gaze-mobile.webp?v=2' : '/heyrin-gaze-desktop.webp?v=2';
+      const url = phone.matches ? '/heyrin-gaze-mobile.webp?v=3' : '/heyrin-gaze-desktop.webp?v=3';
       if (atlas?.getAttribute('src') === url) return;
       const image = new Image();
       atlas = image;
@@ -110,14 +110,20 @@ export function HeroRobot() {
       image.onerror = () => { if (atlas === image) atlas = undefined; };
       image.src = url;
     };
+    const showLoadedArmImage = () => {
+      if (visible() && !disposed && armImage.naturalWidth && !arms.classList.contains('is-playing')) {
+        armImage.classList.add('is-playing');
+      }
+    };
     const showArmImage = () => {
       if (!visible() || disposed) return;
-      if (!armImage.hasAttribute('src')) armImage.src = '/heyrin-arms-mobile.webp?v=2';
-      armImage.classList.add('is-playing');
+      if (!armImage.hasAttribute('src')) armImage.src = '/heyrin-arms-mobile.webp?v=3';
+      if (armImage.complete) showLoadedArmImage();
     };
     const syncArms = () => {
       if (!visible() || connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? '')) {
         arms.pause();
+        arms.classList.remove('is-playing');
         armImage.classList.remove('is-playing');
         armImage.removeAttribute('src');
         return;
@@ -129,7 +135,7 @@ export function HeroRobot() {
         return;
       }
       if (!poster.complete || !poster.naturalWidth) return;
-      if (!arms.hasAttribute('src')) arms.src = '/heyrin-arms.mp4?v=2';
+      if (!arms.hasAttribute('src')) arms.src = '/heyrin-arms.mp4?v=3';
       arms.muted = true;
       if (arms.error) showArmImage();
       else if (arms.paused) void arms.play().catch(error => {
@@ -137,7 +143,7 @@ export function HeroRobot() {
       });
     };
     const showArms = () => {
-      if (phone.matches) return;
+      if (phone.matches || !visible()) return;
       arms.classList.add('is-playing');
       armImage.classList.remove('is-playing');
     };
@@ -215,6 +221,7 @@ export function HeroRobot() {
     window.addEventListener('load', syncArms);
     arms.addEventListener('playing', showArms);
     arms.addEventListener('error', hideArms);
+    armImage.addEventListener('load', showLoadedArmImage);
     poster.addEventListener('load', onPosterLoad);
     window.addEventListener('pointermove', onPointer, { passive: true });
     document.documentElement.addEventListener('pointerleave', reset);
@@ -237,6 +244,7 @@ export function HeroRobot() {
       window.removeEventListener('load', syncArms);
       arms.removeEventListener('playing', showArms);
       arms.removeEventListener('error', hideArms);
+      armImage.removeEventListener('load', showLoadedArmImage);
       arms.pause();
       poster.removeEventListener('load', onPosterLoad);
       window.removeEventListener('pointermove', onPointer);
@@ -255,11 +263,11 @@ export function HeroRobot() {
     <div ref={sceneRef} data-voice-state="idle" className="hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px]">
       <div className="hero-robot-stage" aria-hidden="true">
         <picture>
-          <source media="(max-width: 767px)" srcSet="/heyrin-lit-mobile.webp?v=2" />
-          <img ref={posterRef} className="hero-robot-body" src="/heyrin-lit-desktop.webp?v=2" alt="" width={1152} height={900} fetchPriority="high" />
+          <source media="(max-width: 767px)" srcSet="/heyrin-lit-mobile.webp?v=3" />
+          <img ref={posterRef} className="hero-robot-body" src="/heyrin-lit-desktop.webp?v=3" alt="" width={1152} height={900} fetchPriority="high" />
         </picture>
         <video ref={armsRef} className="hero-robot-arms" muted playsInline loop preload="none" disablePictureInPicture />
-        <img ref={armImageRef} className="hero-robot-arms" alt="" loading="lazy" decoding="async" />
+        <img ref={armImageRef} className="hero-robot-arms" alt="" decoding="async" />
         <div ref={headRef} className="hero-robot-head" />
         <div className="hero-robot-orbits">
           <span className="hero-robot-orbit-lime" />
