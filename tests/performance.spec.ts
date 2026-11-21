@@ -7,6 +7,7 @@ test('mobile can read and navigate the prerendered page with JavaScript disabled
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Never miss another call.' })).toBeVisible();
     await expect(page.locator('.hero-static-preview img')).toBeVisible();
+    await expect(page.getByRole('button', { name: /say hello to heyrin/i })).toHaveCount(0);
     await page.getByRole('link', { name: 'Hear Heyrin in Action' }).click();
     await expect(page).toHaveURL(/#experience$/);
     await expect(page.locator('#experience')).toBeInViewport();

@@ -59,68 +59,18 @@ body { overflow-x: hidden; }
 }
 .magnetic-btn:hover::after, .rin-button:hover::after { transform: translateX(120%); }
 
-/* ---- Hero: glowing halo + orbit ring so the robot's side is never empty while the 3D scene loads ---- */
-@keyframes heyrinRing { from { transform: translate(-50%, -50%) rotate(-14deg); } to { transform: translate(-50%, -50%) rotate(346deg); } }
-@keyframes heyrinBreathe { 0%, 100% { opacity: .75; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); } }
-@keyframes heyrinFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -2.2%; } }
-.hero-scene::before {
-  content: ''; position: absolute; left: 50%; top: 50%; width: min(78%, 560px); aspect-ratio: 1; border-radius: 50%;
-  transform: translate(-50%, -50%); z-index: 0; pointer-events: none; transition: opacity .6s ease;
-  background: radial-gradient(circle, rgba(161, 107, 255, .2), rgba(185, 255, 50, .07) 46%, transparent 70%);
-  filter: blur(14px); animation: heyrinBreathe 5s ease-in-out infinite;
-}
-.hero-scene::after {
-  content: ''; position: absolute; left: 50%; top: 50%; width: min(96%, 700px); height: 38%; border-radius: 50%; z-index: 0;
-  border: 1px solid rgba(185, 255, 50, .28); box-shadow: 0 0 24px rgba(185, 255, 50, .1), inset 0 0 24px rgba(161, 107, 255, .1);
-  transform: translate(-50%, -50%) rotate(-14deg); pointer-events: none; transition: opacity .6s ease; animation: heyrinRing 40s linear infinite;
-}
-.hero-scene.is-ready::before, .hero-scene.is-ready::after { opacity: 0; }
 @media (max-width: 767px) {
-  .hero-scene.is-ready::before, .hero-scene.is-ready::after { opacity: 1; } /* phones keep the static robot, so keep its halo too */
-  .hero-static-preview-image { animation: heyrinFloat 6.5s ease-in-out infinite; filter: drop-shadow(0 0 26px rgba(185,255,50,.2)) drop-shadow(0 0 70px rgba(161,107,255,.3)); }
   .noise-overlay { display: none; }
   .rin-overline, .rin-final-overline { font-size: 10px !important; letter-spacing: .08em !important; }
   .magnetic-btn, .rin-button, .rin-unified-tabs button, .rin-capability-choice, .rin-scenario { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-scene::before, .hero-scene::after, .hero-static-preview-image { animation: none !important; }
   html { scroll-behavior: auto; }
 }
 
 /* Tiny utility-sized labels: keep them readable */
 .text-\[9px\] { font-size: 0.6875rem !important; line-height: 1.35 !important; }
 .text-\[10px\] { font-size: 0.72rem !important; line-height: 1.4 !important; }
-
-/* ===== Instant robot on every screen =====
-   Desktop: the transparent robot poster shows immediately while the live 3D scene boots, then crossfades. */
-@media (min-width: 769px), (min-width: 768px) {
-  .hero-static-preview.is-loading { opacity: 1; visibility: visible; }
-}
-/* Phone: robot takes centre stage ABOVE the headline (large bust shot) instead of hiding behind the buttons. */
-@media (max-width: 767px) {
-  .hero-shell { min-height: auto !important; }
-  .hero-scene { top: 3.25rem !important; bottom: auto !important; left: 0 !important; right: 0 !important; width: 100% !important; min-width: 0 !important; height: 19.5rem !important; opacity: 1 !important;
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 74%, transparent 100%) !important; mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 74%, transparent 100%) !important; }
-  .hero-static-preview { place-items: start center !important; }
-  .hero-static-preview.is-loading, .hero-static-preview.is-fallback { opacity: 1 !important; visibility: visible !important; }
-  .hero-static-preview picture { display: block; width: 128%; margin-top: -2.2rem; }
-  .hero-static-preview-image { width: 100% !important; height: auto !important; max-width: none !important; max-height: none !important; }
-  .hero-content { padding-top: 19.5rem !important; padding-bottom: 4rem !important; align-items: flex-start !important; }
-  .hero-vignette { background: linear-gradient(180deg, rgba(5,6,7,0) 0%, rgba(5,6,7,0) 42%, rgba(5,6,7,.5) 58%, #050607 100%) !important; }
-  .hero-orbit-glow { top: 1.5rem !important; right: -25% !important; height: 20rem !important; width: 20rem !important; }
-}
-
-/* Phone hero v2: whole upper body visible (arms included), no empty gap under the buttons. */
-@media (max-width: 767px) {
-  .hero-scene { top: 3.6rem !important; height: 24.5rem !important;
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%) !important; mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%) !important; }
-  .hero-static-preview { place-items: center !important; }
-  .hero-static-preview picture { width: 100% !important; margin-top: 0 !important; }
-  .hero-static-preview-image { animation: none; transform: none !important; -webkit-mask-image: radial-gradient(ellipse 60% 56% at 50% 50%, #000 55%, transparent 100%) !important; mask-image: radial-gradient(ellipse 60% 56% at 50% 50%, #000 55%, transparent 100%) !important; }
-  .hero-content { padding-top: 27rem !important; padding-bottom: 5.5rem !important; }
-  .hero-meta { margin-top: 2.25rem !important; flex-wrap: wrap; }
-  .hero-heading { font-size: clamp(2.6rem, 13vw, 3.35rem) !important; }
-}
 
 /* Phone reviews: swipeable row instead of eight stacked cards (much shorter page). */
 @media (max-width: 650px) {
@@ -129,72 +79,74 @@ body { overflow-x: hidden; }
   .rin-review-grid .rin-review-card { flex: 0 0 84%; scroll-snap-align: center; min-height: 0; }
 }
 
-/* Desktop/tablet poster: wrapper fills the scene and the image is sized by height like the live 3D robot,
-   so short browser windows no longer crop the hands/legs and the poster→3D handoff does not jump. */
-@media (min-width: 768px) {
-  .hero-static-preview { place-items: stretch !important; grid-template-columns: minmax(0, 100%) !important; grid-template-rows: minmax(0, 100%) !important; }
-  .hero-static-preview picture { display: block !important; width: 100% !important; height: 100% !important; min-height: 0 !important; margin: 0 !important; }
-  .hero-static-preview-image { width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain !important; object-position: 50% 50% !important;
-    -webkit-mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; mask-image: radial-gradient(ellipse 40% 52% at 50% 50%, #000 58%, transparent 100%) !important; }
+/* The still and the first frame share the same crop on every screen. */
+.hero-scene { mix-blend-mode: screen; pointer-events: none; }
+.hero-robot-visual {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 64%;
+  transition: transform 320ms cubic-bezier(.2,.7,.25,1);
 }
-
-/* Phones now run the live 3D too: the poster must go away once it is ready (handled by the swap rules below). */
-
-/* Poster -> live 3D swap, all screen sizes. The live robot + rings switch on instantly (no fade, so there is no
-   dip where both are half transparent); the poster, which sits on top, then fades away in a short .22s. */
-.hero-static-preview { transition: opacity .22s ease, visibility 0s linear 0s; }
-.hero-static-preview.is-hidden { opacity: 0; visibility: hidden; transition: opacity .22s ease, visibility 0s linear .22s; }
-.hero-spline-character { transition: none !important; }
-
-/* Phone: poster fills the scene box exactly like the live canvas does, so the swap does not jump. */
-@media (max-width: 767px) {
-  .hero-static-preview { place-items: stretch !important; }
-  .hero-static-preview picture { display: block !important; width: 100% !important; height: 100% !important; margin: 0 !important; }
-  .hero-static-preview-image { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: 50% 50% !important; }
-}
-
-
-/* v3 poster = a capture of the finished scene (robot + rings + particles), so the swap to the live 3D is invisible.
-   No separate mask/ring/blend styling on it any more; it simply fills the scene box like the live canvas does. */
-.hero-static-preview-image { -webkit-mask-image: none !important; mask-image: none !important; animation: none !important; transform: none !important; mix-blend-mode: screen; }
-@media (min-width: 768px) { .hero-static-preview-image { object-fit: cover !important; object-position: 50% 50% !important; } }
-/* the CSS orbit glow/ring behind the old poster would double up with the rings now baked into the image */
-.hero-scene::before, .hero-scene::after { display: none !important; }
-
-/* Phone: the poster is never perfectly still while the live robot downloads (tiny float, GPU only). */
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-  .hero-static-preview.is-loading .hero-static-preview-image { animation: heyrinFloat 5.5s ease-in-out infinite !important; }
-}
-
-/* ===== v4: the robot is now a looping video (pure-black background) =====
-   Screen-blend the whole scene layer onto the page so the clip's edges vanish (blending must happen on the element
-   that owns the stacking context, i.e. .hero-scene, not on the video inside it). */
-.hero-scene { mix-blend-mode: screen; }
-.hero-static-preview-image { mix-blend-mode: normal !important; -webkit-mask-image: none !important; mask-image: none !important; }
-.hero-static-preview-image::-webkit-media-controls { display: none !important; }
-@media (max-width: 767px) {
-  .hero-scene { top: 3.4rem !important; height: 20.5rem !important; }
-  .hero-content { padding-top: 22.5rem !important; }
-}
-
-/* Keep the real robot poster visible until the clip can play. */
+.hero-static-preview { position: absolute; inset: 0; transform-origin: 50% 64%; }
+.hero-static-preview picture, .hero-static-preview-image { display: block; width: 100%; height: 100%; }
+.hero-static-preview-image { object-fit: cover; object-position: center; }
 .hero-robot-motion { position: absolute; inset: 0; opacity: 0; }
+.hero-robot-motion::-webkit-media-controls { display: none; }
 .hero-scene.is-playing .hero-robot-motion { opacity: 1; }
 .hero-scene.is-playing picture { visibility: hidden; }
+
+/* Only the robot's head and upper torso receive taps. Keep the navigation and hero links clear. */
+.hero-robot-greet {
+  pointer-events: auto;
+  position: absolute;
+  top: 15%;
+  left: 38%;
+  width: 24%;
+  height: 49%;
+  border-radius: 36%;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.hero-scene:not(.has-robot-interaction) .hero-robot-greet { display: none; }
+.hero-content { pointer-events: none; }
+.hero-copy-column { pointer-events: auto; }
+
+@media (max-width: 767px) {
+  .hero-shell { min-height: auto; }
+  .hero-scene {
+    top: 3.4rem;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 0;
+    height: 20.5rem;
+    opacity: 1;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%);
+  }
+  .hero-content { padding-top: 22.5rem; padding-bottom: 5.5rem; align-items: flex-start; }
+  .hero-vignette { background: linear-gradient(180deg, transparent 42%, rgba(5,6,7,.5) 58%, #050607 100%); }
+  .hero-orbit-glow { top: 1.5rem; right: -25%; height: 20rem; width: 20rem; }
+  .hero-meta { margin-top: 2.25rem; flex-wrap: wrap; }
+  .hero-heading { font-size: clamp(2.6rem, 13vw, 3.35rem); }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .hero-robot-greet { height: 25%; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .hero-robot-motion { display: none; }
+  .hero-robot-greet, .hero-robot-motion { display: none; }
   .hero-scene.is-playing picture { visibility: visible; }
+  .hero-robot-visual { transition: none; transform: none !important; }
 }
 
 .hero-shell:not(.is-in-view) .hero-orbit-glow,
 .hero-shell:not(.is-in-view) .animate-pulse-slow { animation-play-state: paused; }
-@media (max-width: 767px) {
-  .hero-static-preview-image { filter: none; }
-}
 
-/* This state is triggered by actual prerecorded audio playback, not a simulated agent. */
-.hero-scene[data-voice-state="speaking"] { filter: saturate(1.17) brightness(1.06); transition: filter 240ms ease-out; }
-@media (prefers-reduced-motion: reduce) { .hero-scene[data-voice-state="speaking"] { transition: none; } }
+/* The accent follows actual prerecorded audio playback. */
+.hero-scene[data-voice-state="speaking"] { filter: saturate(1.17) brightness(1.06); }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-scene { transition: filter 240ms ease-out; }
+}
 
 /* Optional real chat integration; no fake responses when the backend is absent. */
 .heyrin-chat-root{position:fixed;bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));right:1.2rem;z-index:70;font-family:Inter,system-ui,sans-serif}
@@ -232,34 +184,6 @@ body { overflow-x: hidden; }
   .heyrin-chat-launcher { width: 48px; height: 48px; min-height: 48px; padding: 0; border: 0; border-radius: 12px; background: transparent; color: #f6f7f4; box-shadow: none; }
   .heyrin-chat-launcher span { display: none; }
 }
-
-/* On-demand original Spline rig: the light MP4 stays visible until the canvas is ready. */
-.hero-rig-layer { position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;transition:opacity .24s ease; }
-.hero-rig-layer.is-ready { opacity:1; }
-.hero-rig-layer .hero-spline-character { inset:0;opacity:1!important; }
-.hero-rig-layer canvas { display:block;width:100%!important;height:100%!important;background:transparent!important; }
-.hero-scene.is-interactive .hero-static-preview { opacity:0!important;visibility:hidden!important; }
-.hero-rig-toggle { position:absolute;right:1rem;bottom:1.15rem;z-index:5;display:flex;align-items:center;justify-content:center;min-height:35px;padding:.42rem .85rem;border:1px solid rgba(185,255,50,.36);border-radius:99px;color:#cfdacb;background:rgba(8,12,10,.82);font:600 .7rem/1.15 Inter,system-ui,sans-serif;letter-spacing:.015em;backdrop-filter:blur(12px);cursor:pointer; }
-.hero-rig-toggle:hover,.hero-rig-toggle:focus-visible { border-color:#b9ff32;color:#b9ff32; }
-.hero-rig-toggle:focus-visible { outline:2px solid #b9ff32;outline-offset:3px; }
-.hero-rig-toggle:disabled { opacity:.35;cursor:not-allowed; }
-.hero-rig-error { position:absolute;z-index:5;right:1rem;bottom:3.8rem;max-width:200px;padding:.55rem .7rem;border:1px solid rgba(185,255,50,.25);border-radius:8px;color:#ebefe7;background:rgba(7,12,8,.9);font-size:.7rem; }
-@media (max-width:767px) { .hero-rig-toggle { bottom:.8rem;right:.8rem; } .hero-rig-error { bottom:3.3rem;right:.8rem; } }
-@media (prefers-reduced-motion:reduce) { .hero-rig-layer { transition:none; } }
-/* Keep transparent hero layout from swallowing clicks intended for the rig toggle. */
-.hero-content { pointer-events:none; }
-.hero-copy-column { pointer-events:auto; }
-
-/* Avoid the independently fixed chat launcher and the hero's CTA interaction zone. */
-@media (min-width: 1024px) {
-  .hero-rig-toggle { right: 10.75rem; }
-  .hero-rig-error { right: 10.75rem; }
-}
-@media (min-width: 768px) and (max-width: 1023px) {
-  .hero-rig-toggle { top: 5.2rem; right: 1.1rem; bottom: auto; }
-  .hero-rig-error { top: 8rem; right: 1.1rem; bottom: auto; }
-}
-
 
 /* Useful static help before a paid real-time AI integration is available. */
 .heyrin-chat-guide { display:block; overflow-y:auto; overscroll-behavior:contain; }

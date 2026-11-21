@@ -1,70 +1,14 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 
-const InteractiveRobot = lazy(() => import('../three/InteractiveRobot').then(module => ({ default: module.InteractiveRobot })));
-
+const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
 
 export function Hero() {
   const sceneRef = useRef<HTMLDivElement>(null);
+  const visualRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const interactiveReadyRef = useRef(false);
-  const [rigRequested, setRigRequested] = useState(false);
-  const [rigReady, setRigReady] = useState(false);
-  const [rigError, setRigError] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  const disableRig = (failed = false) => {
-    interactiveReadyRef.current = false;
-    setRigRequested(false);
-    setRigReady(false);
-    setRigError(failed);
-    const video = videoRef.current;
-    if (video && !document.hidden && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      void video.play().catch(() => {});
-    }
-  };
-  const readyRig = () => {
-    interactiveReadyRef.current = true;
-    videoRef.current?.pause();
-    setRigReady(true);
-  };
-
-  useEffect(() => {
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const check = () => {
-      setReducedMotion(motion.matches);
-      if (motion.matches && interactiveReadyRef.current) disableRig();
-    };
-    check();
-    motion.addEventListener('change', check);
-    return () => motion.removeEventListener('change', check);
-  }, []);
-
-  useEffect(() => {
-    if (!rigRequested || rigReady) return;
-    // Background pages have throttled WebGL and animation frames: count only
-    // foreground loading time, so tab-switching cannot trigger a false failure.
-    let timeLeft = 12_000;
-    let startedAt = 0;
-    let timeout: number | undefined;
-    const stop = () => {
-      if (timeout === undefined) return;
-      window.clearTimeout(timeout);
-      timeout = undefined;
-      timeLeft -= Math.max(0, performance.now() - startedAt);
-    };
-    const update = () => {
-      if (document.hidden) { stop(); return; }
-      if (timeout !== undefined) return;
-      if (timeLeft <= 0) { disableRig(true); return; }
-      startedAt = performance.now();
-      timeout = window.setTimeout(() => { timeout = undefined; disableRig(true); }, timeLeft);
-    };
-    update();
-    document.addEventListener('visibilitychange', update);
-    return () => { stop(); document.removeEventListener('visibilitychange', update); };
-  }, [rigRequested, rigReady]);
+  const reactionRef = useRef<Animation | null>(null);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -72,13 +16,13 @@ export function Hero() {
     if (!scene || !video) return;
 
     const phone = window.matchMedia('(max-width: 767px)');
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const motion = window.matchMedia(reducedMotionQuery);
     const connection = (navigator as Navigator & {
       connection?: EventTarget & { saveData?: boolean; effectiveType?: string };
     }).connection;
     let inView = !('IntersectionObserver' in window);
     let ready = false;
-    let startTimer: number | undefined;
+    let startFrame = 0;
     let selectedSource = '';
     let firstFrame: number | undefined;
 
@@ -100,19 +44,27 @@ export function Hero() {
     };
 
     const sync = () => {
-      if (!ready || interactiveReadyRef.current || !inView || document.hidden || motion.matches || connection?.saveData ||
-          /(^|-)2g$/.test(connection?.effectiveType ?? '')) {
+      if (motion.matches || connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? '')) {
+        video.pause();
+        showPoster();
+        return;
+      }
+      if (!ready || !inView || document.hidden) {
         video.pause();
         return;
       }
 
-      const source = phone.matches ? '/heyrin-robot-v4-sm.mp4' : '/heyrin-robot-v4.mp4';
+      const source = phone.matches ? '/heyrin-robot-clean-sm.mp4' : '/heyrin-robot-clean.mp4';
       if (selectedSource !== source) {
         selectedSource = source;
         showPoster();
         video.src = source;
       }
-      if (video.paused) void video.play().catch(showPoster);
+      if (video.paused && !video.error) {
+        void video.play().catch(error => {
+          if (error.name !== 'AbortError') showPoster();
+        });
+      }
     };
 
     const observer = 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => {
@@ -123,15 +75,13 @@ export function Hero() {
     observer?.observe(scene);
     if (!observer) scene.closest('.hero-shell')?.classList.add('is-in-view');
 
-    const start = () => {
-      // Let the initial HTML, styles, and poster render before starting the animation.
-      startTimer = window.setTimeout(() => {
+    // Give the poster a paint before requesting the motion clip.
+    startFrame = requestAnimationFrame(() => {
+      startFrame = requestAnimationFrame(() => {
         ready = true;
         sync();
-      }, 150);
-    };
-    if (document.readyState === 'complete') start();
-    else window.addEventListener('load', start, { once: true });
+      });
+    });
 
     video.addEventListener('playing', showVideo);
     video.addEventListener('error', showPoster);
@@ -142,8 +92,7 @@ export function Hero() {
 
     return () => {
       observer?.disconnect();
-      window.clearTimeout(startTimer);
-      window.removeEventListener('load', start);
+      cancelAnimationFrame(startFrame);
       video.removeEventListener('playing', showVideo);
       video.removeEventListener('error', showPoster);
       document.removeEventListener('visibilitychange', sync);
@@ -163,67 +112,81 @@ export function Hero() {
     const onRecordedAudio = (event: Event) => {
       const active = (event as CustomEvent<{ active: boolean }>).detail.active;
       scene.dataset.voiceState = active ? 'speaking' : 'idle';
-      setSpeaking(active);
     };
     window.addEventListener('heyrin:recorded-audio', onRecordedAudio);
     return () => window.removeEventListener('heyrin:recorded-audio', onRecordedAudio);
   }, []);
 
-  // Lightweight pointer response for the existing pre-rendered robot clip.
-  // The actual character rig is not loaded; this moves the entire composition,
-  // avoiding a second WebGL render loop on phones and low-powered devices.
   useEffect(() => {
     const scene = sceneRef.current;
-    if (!scene) return;
-    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let frame = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let targetX = 0;
-    let targetY = 0;
-    let lastFrame = 0;
+    const visual = visualRef.current;
+    if (!scene || !visual) return;
 
-    const tick = (now: number) => {
-      const dt = lastFrame ? Math.min((now - lastFrame) / 1000, 0.05) : 1 / 60;
-      lastFrame = now;
-      const ease = 1 - Math.exp(-8 * dt);
-      currentX += (targetX - currentX) * ease;
-      currentY += (targetY - currentY) * ease;
-      scene.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0)`;
-      if (Math.abs(targetX - currentX) + Math.abs(targetY - currentY) > 0.06) {
-        frame = requestAnimationFrame(tick);
-      } else {
-        frame = 0;
-        lastFrame = 0;
-      }
+    scene.classList.add('has-robot-interaction');
+    const hero = scene.closest('.hero-shell');
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const motion = window.matchMedia(reducedMotionQuery);
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+
+    const update = () => {
+      frame = 0;
+      visual.style.transform = x || y
+        ? `translate3d(${x * 20}px, ${y * 10}px, 0) rotate(${x * 1.6}deg)`
+        : '';
     };
-    const schedule = () => { if (!frame) frame = requestAnimationFrame(tick); };
-    const reset = () => { targetX = targetY = 0; schedule(); };
+    const reset = () => {
+      cancelAnimationFrame(frame);
+      x = y = 0;
+      update();
+    };
     const onPointerMove = (event: PointerEvent) => {
-      if (!finePointer.matches || reducedMotion.matches || document.hidden) return;
-      targetX = Math.max(-12, Math.min(12, ((event.clientX / innerWidth) - 0.5) * 24));
-      targetY = Math.max(-7, Math.min(7, ((event.clientY / innerHeight) - 0.5) * 14));
-      schedule();
+      if (event.pointerType === 'touch' || !finePointer.matches || motion.matches || document.hidden ||
+          !hero?.classList.contains('is-in-view')) return;
+      x = Math.max(-1, Math.min(1, event.clientX / innerWidth * 2 - 1));
+      y = Math.max(-1, Math.min(1, event.clientY / innerHeight * 2 - 1));
+      if (!frame) frame = requestAnimationFrame(update);
     };
     const onConditionsChanged = () => {
-      if (!finePointer.matches || reducedMotion.matches || document.hidden) reset();
+      if (document.hidden || motion.matches) reactionRef.current?.cancel();
+      reset();
     };
+
     window.addEventListener('pointermove', onPointerMove, { passive: true });
+    document.documentElement.addEventListener('pointerleave', reset);
     window.addEventListener('blur', reset);
     document.addEventListener('visibilitychange', onConditionsChanged);
-    finePointer.addEventListener('change', onConditionsChanged);
-    reducedMotion.addEventListener('change', onConditionsChanged);
+    finePointer.addEventListener('change', reset);
+    motion.addEventListener('change', onConditionsChanged);
     return () => {
+      scene.classList.remove('has-robot-interaction');
       window.removeEventListener('pointermove', onPointerMove);
+      document.documentElement.removeEventListener('pointerleave', reset);
       window.removeEventListener('blur', reset);
       document.removeEventListener('visibilitychange', onConditionsChanged);
-      finePointer.removeEventListener('change', onConditionsChanged);
-      reducedMotion.removeEventListener('change', onConditionsChanged);
-      cancelAnimationFrame(frame);
-      scene.style.transform = '';
+      finePointer.removeEventListener('change', reset);
+      motion.removeEventListener('change', onConditionsChanged);
+      reset();
+      reactionRef.current?.cancel();
     };
   }, []);
+
+  const greetRobot = () => {
+    const preview = previewRef.current;
+    if (!preview || window.matchMedia(reducedMotionQuery).matches) return;
+    const video = videoRef.current;
+    if (video?.paused && video.hasAttribute('src') && !video.error) {
+      void video.play().catch(() => {});
+    }
+    reactionRef.current?.cancel();
+    reactionRef.current = preview.animate([
+      { transform: 'none' },
+      { transform: 'translateY(-7px) rotate(-2.4deg) scale(1.025)', offset: 0.4 },
+      { transform: 'translateY(2px) rotate(.7deg)', offset: 0.74 },
+      { transform: 'none' },
+    ], { duration: 640, easing: 'ease-in-out' });
+  };
 
   return (
     <section id="home" className="hero-shell relative min-h-screen w-full overflow-hidden bg-ink-base">
@@ -232,40 +195,27 @@ export function Hero() {
       <div className="absolute -left-32 top-[24%] h-[34rem] w-[34rem] rounded-full bg-lime/5 blur-[130px] pointer-events-none" />
       <div className="hero-orbit-glow pointer-events-none absolute right-[7%] top-[17%] h-[34rem] w-[34rem] rounded-full bg-violet/10 blur-[110px]" />
 
-      <div ref={sceneRef} data-voice-state="idle" className={`hero-scene ${rigReady ? 'is-interactive' : ''} absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px]`}>
-        <div className="hero-static-preview is-fallback" aria-hidden="true">
-          <picture>
-            <source media="(max-width: 767px)" srcSet="/heyrin-robot-v4-sm.jpg" />
-            <img className="hero-static-preview-image" src="/heyrin-robot-v4.jpg" alt="" width={1152} height={900} />
-          </picture>
-          <video
-            ref={videoRef}
-            className="hero-static-preview-image hero-robot-motion"
-            width={1152}
-            height={900}
-            muted
-            loop
-            playsInline
-            preload="none"
-            disablePictureInPicture
-          />
-        </div>
-        {rigRequested && (
-          <div className={`hero-rig-layer ${rigReady ? 'is-ready' : ''}`} aria-label="Original interactive Heyrin 3D robot">
-            <Suspense fallback={null}>
-              <InteractiveRobot speaking={speaking} onReady={readyRig} onError={() => disableRig(true)} />
-            </Suspense>
+      <div ref={sceneRef} data-voice-state="idle" className="hero-scene absolute inset-y-0 right-0 z-[1] w-[60%] min-w-[560px]">
+        <div ref={visualRef} className="hero-robot-visual" aria-hidden="true">
+          <div ref={previewRef} className="hero-static-preview">
+            <picture>
+              <source media="(max-width: 767px)" srcSet="/heyrin-robot-clean-sm.jpg" />
+              <img className="hero-static-preview-image" src="/heyrin-robot-clean.jpg" alt="" width={1152} height={900} fetchPriority="high" />
+            </picture>
+            <video
+              ref={videoRef}
+              className="hero-static-preview-image hero-robot-motion"
+              width={1152}
+              height={900}
+              muted
+              loop
+              playsInline
+              preload="none"
+              disablePictureInPicture
+            />
           </div>
-        )}
-        <button
-          type="button"
-          className="hero-rig-toggle"
-          disabled={reducedMotion}
-          aria-label={rigRequested ? 'Return to animated robot' : 'Enable interactive 3D robot'}
-          aria-pressed={rigRequested}
-          onClick={() => rigRequested ? disableRig() : (setRigError(false), setRigRequested(true))}
-        >{rigRequested ? 'Animated view' : 'Interactive 3D'}</button>
-        {rigError && <span className="hero-rig-error" role="status">3D robot unavailable. Animated view restored.</span>}
+        </div>
+        <button type="button" className="hero-robot-greet" aria-label="Say hello to Heyrin's robot" onClick={greetRobot} />
       </div>
 
       <div className="hero-content relative z-10 mx-auto flex min-h-screen max-w-[1440px] items-center px-6 pb-16 pt-28 sm:px-10 lg:px-14 xl:px-20">

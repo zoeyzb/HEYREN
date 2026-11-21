@@ -9,6 +9,7 @@ test('all major website sections remain inside common phone, tablet and desktop 
     await expect(page.locator('#contact')).toHaveCount(1);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, `horizontal document overflow at ${width}px`).toBeLessThanOrEqual(1);
+    await page.getByRole('button', { name: /say hello to heyrin/i }).click({ trial: true });
     const controls = await page.locator('.heyrin-chat-launcher').boundingBox();
     expect(controls, `chat launcher should be visible at ${width}px`).not.toBeNull();
     expect(controls!.x, `chat launcher clipped at ${width}px`).toBeGreaterThanOrEqual(0);
