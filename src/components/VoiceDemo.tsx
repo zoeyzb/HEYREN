@@ -134,7 +134,7 @@ export function VoiceDemo() {
       <div className="rin-overline"><span>02 / CONVERSATION PLAYBACK</span><span>EXPLORE THE INTERACTION</span></div>
       <div className="rin-heading-row">
         <h2>Every conversation<br/><em>moves things forward.</em></h2>
-        <p>Hear the shape of a better first impression. Explore how Heyrin can guide common customer conversations into a clear next step.</p>
+        <p>Pick a call. Hear how Heyrin handles it.</p>
       </div>
       <div className="rin-call-composition">
         <div className="rin-scenario-rail" role="tablist" aria-label="Example conversations">

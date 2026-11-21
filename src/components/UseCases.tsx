@@ -16,7 +16,7 @@ export function UseCases(){
  useEffect(() => {
    const conversation = conversationRef.current;
    if (!conversation || typeof IntersectionObserver === 'undefined' ||
-       window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+       window.matchMedia('(max-width: 767px), (prefers-reduced-motion: reduce)').matches) return;
 
    let timer: number | undefined;
    const observer = new IntersectionObserver(([entry]) => {
@@ -54,7 +54,7 @@ export function UseCases(){
  return <section id="industries" className="rin-section rin-industries">
    <div className="rin-container">
      <div className="rin-overline"><span>04 / INDUSTRIES</span><span>ONE PLATFORM, DIFFERENT CONVERSATIONS</span></div>
-     <div className="rin-heading-row"><h2>Every industry<br/><em>speaks differently.</em></h2><p>Every industry has its own language. Heyrin adapts the reply to the request, the context, and the next step.</p></div>
+     <div className="rin-heading-row"><h2>Every industry<br/><em>speaks differently.</em></h2><p>Choose your industry to see a sample call.</p></div>
      <div className="rin-industry-layout"><div className="rin-industry-nav" role="tablist" aria-label="Choose an industry">{industries.map((item,i)=>{const Icon=item.icon;return <button type="button" role="tab" aria-selected={selected===i} className={selected===i?'is-active':''} onClick={()=>setSelected(i)} key={item.name}><Icon size={19}/><span>{item.name}</span><ArrowUpRight size={17}/></button>})}</div>
        <div ref={conversationRef} className="rin-industry-conversation" role="tabpanel" aria-label={active.name} key={active.name}>
          <div className="rin-industry-top"><span className="rin-mini-label">EXAMPLE TEXT / {active.name.toUpperCase()}</span><span>TEXT CONVERSATION</span></div>

@@ -33,9 +33,11 @@ export function Hero() {
               <span className="text-lime">Always there.</span>{' '}
               <span className="text-violet-glow">Always ready.</span>
             </p>
-            <p className="mt-4 max-w-[500px] text-[15px] leading-7 text-silver sm:text-base">
-              An AI voice agent that answers every call, handles routine questions, and helps turn more conversations into customers.
-            </p>
+            <ul className="hero-benefits" aria-label="What Heyrin does">
+              <li>Answer routine calls.</li>
+              <li>Capture new leads.</li>
+              <li>Book appointments.</li>
+            </ul>
           </div>
 
           <div className="hero-actions mt-9 flex flex-col gap-3 sm:flex-row">

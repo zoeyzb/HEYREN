@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { ArrowUpRight, Minus, Plus } from 'lucide-react';
 const faqs=[
- ['What is an AI voice agent?','An AI voice agent can answer calls and speak with customers using configured business knowledge and conversation flows. Heyrin is tailored to the questions your customers actually ask.'],
- ['Can Heyrin answer calls after business hours?','The agent can be configured for after-hours coverage, subject to your phone system setup and call routing.'],
- ['Can it book appointments?','Yes. Heyrin checks your connected calendar, books an available time, and sends the customer a confirmation. If a requested slot is unavailable, it offers the next suitable option.'],
- ['Can it handle my company’s specific questions?','Yes. We set up the approved knowledge, services, policies, and conversation paths for your business, then test them with you.'],
- ['What happens when someone needs a person?','Heyrin passes the conversation and the important details to your team, so the customer does not have to start over.'],
- ['Will this work with the tools I already use?','Heyrin connects your phone, calendar, and business tools into one clear workflow, so conversations can lead to a real next step.'],
- ['How do we get started?','Tell us about the calls you want to handle. We map the experience, configure the agent, and work with you to test it before launch.'],
+ ['What is an AI voice agent?','It answers calls using the services, policies and scripts you approve.'],
+ ['Can Heyrin answer calls after business hours?','Yes, when your phone system routes after-hours calls to Heyrin.'],
+ ['Can it book appointments?','Yes. Connect your calendar so Heyrin can offer open times, book and confirm.'],
+ ['Can it handle my company’s specific questions?','Yes. You approve the answers and test them before launch.'],
+ ['What happens when someone needs a person?','Your team gets the call details so the caller can pick up where they left off.'],
+ ['Will this work with the tools I already use?','We check your phone, calendar and business tools during setup.'],
+ ['How do we get started?','Tell us which calls to handle. We build the flow and test it with you.'],
 ];
 export function FAQ(){
  const [open,setOpen]=useState<number|null>(0);

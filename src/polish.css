@@ -213,3 +213,30 @@ body { overflow-x: hidden; }
 .heyrin-chat-guide-answer span { font:600 .65rem/1.3 monospace; color:#b9ff32; letter-spacing:.09em; }
 .heyrin-chat-guide-answer p { padding-top:.35rem; color:#e0e8db; font-size:.8rem; line-height:1.55; }
 .heyrin-chat-guide .heyrin-chat-guide-disclaimer { font-size:.71rem; color:#a4b4a8; }
+
+.hero-benefits { display: flex; flex-wrap: wrap; gap: .35rem 1.15rem; margin-top: 1rem; color: #c3c8c4; font-size: .95rem; }
+.hero-benefits li { display: flex; align-items: center; gap: .5rem; }
+.hero-benefits li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #a0bd63; }
+.hero-robot-stage { filter: brightness(.84) contrast(1.08) saturate(1.12); }
+
+@media (max-width: 767px) {
+  .hero-benefits { flex-direction: column; gap: .25rem; }
+  nav.backdrop-blur-xl { backdrop-filter: none; background-color: #080a09; }
+  .hero-shell > .blur-\[130px\] { display: none; }
+  .hero-shell { background-image: radial-gradient(ellipse at 12% 60%, #101608, transparent 56%); }
+  body::before { display: none; }
+  .rin-unified-orbit, .rin-unified-pulse, .rin-chat-live i { animation: none; }
+}
+
+@media (max-width: 767px) {
+  main > section:not(.hero-shell) {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--section-height, 48rem);
+  }
+  #experience, #capabilities { --section-height: 84rem; }
+  #contact { --section-height: 69rem; }
+  #industries { --section-height: 59rem; }
+  #reviews, #getting-started, .rin-final-cta { --section-height: 36rem; }
+  #contact > [class*="blur-"] { display: none; }
+  #contact .backdrop-blur-xl, .hero-actions .backdrop-blur-sm { backdrop-filter: none; }
+}

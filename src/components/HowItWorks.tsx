@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { PhoneIncoming, Scan, MessageCircleMore, CalendarCheck2, ArrowUpRight } from 'lucide-react';
 const stages=[
- {icon:PhoneIncoming,label:'The signal',title:'A call comes in.',text:'A customer reaches your number. Heyrin answers with your business context, ready to help.'},
- {icon:Scan,label:'The understanding',title:'Intent takes shape.',text:'The conversation identifies why they called and gathers relevant information.'},
- {icon:MessageCircleMore,label:'The conversation',title:'The right questions.',text:'Responses follow your business knowledge and the flow your team has approved.'},
- {icon:CalendarCheck2,label:'The action',title:'Something moves forward.',text:'A booking request, qualified lead, or human handoff can move into the connected workflow.'},
+ {icon:PhoneIncoming,label:'The signal',title:'A call comes in.',text:'Heyrin picks up with your greeting.'},
+ {icon:Scan,label:'The understanding',title:'Intent takes shape.',text:'It asks what the caller needs.'},
+ {icon:MessageCircleMore,label:'The conversation',title:'The right questions.',text:'It answers using the information you approve.'},
+ {icon:CalendarCheck2,label:'The action',title:'Take the next step.',text:'Request a booking, capture a lead or hand off to your team.'},
 ];
 export function HowItWorks(){
  const ref=useRef<HTMLElement>(null);
@@ -60,7 +60,7 @@ export function HowItWorks(){
  return <section ref={ref} id="how-it-works" className="rin-section rin-journey">
    <div className="rin-container">
      <div className="rin-overline"><span>01 / HOW IT WORKS</span><span>FROM RING TO RESULT</span></div>
-     <div className="rin-heading-row"><h2>One call.<br/><em>Four quiet moves.</em></h2><p>What feels effortless on the caller’s side is a carefully designed sequence underneath.</p></div>
+     <div className="rin-heading-row"><h2>One call.<br/><em>Four quiet moves.</em></h2><p>Follow a call from pickup to handoff.</p></div>
      <div className="rin-journey-track"><div className="rin-journey-line"><span ref={progressRef} className="rin-journey-progress"/></div>
        {stages.map((step,i)=>{const Icon=step.icon;return <button key={step.label} type="button" onClick={()=>setActive(i)} className={`rin-journey-stage ${active===i?'is-active':''}`} aria-pressed={active===i}>
          <div className="rin-journey-marker"><Icon size={22}/></div><span className="rin-mini-label">{String(i+1).padStart(2,'0')} / {step.label}</span><strong>{step.title}</strong><p>{step.text}</p>

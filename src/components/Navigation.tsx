@@ -52,11 +52,11 @@ export function Navigation() {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
           {/* Logo */}
           <button onClick={() => handleNav('#home')} className="flex items-center gap-2.5 group">
-            <div className="relative w-7 h-7 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-lime/60 group-hover:border-lime transition-colors" />
-              <div className="absolute inset-1.5 rounded-full border border-violet/40" />
-              <div className="w-1.5 h-1.5 rounded-full bg-lime group-hover:shadow-[0_0_8px_#B9FF32] transition-shadow" />
-            </div>
+            <svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <circle cx="14" cy="14" r="13" stroke="#9DCA31" strokeWidth="1.5" />
+              <circle cx="14" cy="14" r="7.5" stroke="#9265C5" strokeWidth="1.5" />
+              <circle cx="14" cy="14" r="3" fill="#B9FF32" />
+            </svg>
             <span className="wordmark text-soft text-lg tracking-tight">HEYRIN</span>
           </button>
 

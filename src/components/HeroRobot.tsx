@@ -119,6 +119,7 @@ export function HeroRobot() {
       if (!visible() || connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? '')) {
         arms.pause();
         armImage.classList.remove('is-playing');
+        armImage.removeAttribute('src');
         return;
       }
       if (phone.matches) {

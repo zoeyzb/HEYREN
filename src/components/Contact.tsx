@@ -137,7 +137,7 @@ export function Contact() {
               Every call<br />could be more.
             </h2>
             <p className="text-sm text-silver/70 mb-8 leading-relaxed max-w-sm">
-              Tell us about your business. Let's explore what Heyrin could handle for you.
+              Which calls should Heyrin take off your hands?
             </p>
 
             <div className="space-y-3">

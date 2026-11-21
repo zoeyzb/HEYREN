@@ -4,7 +4,7 @@ test('desktop: scenario, capabilities, intelligence, industry, FAQ and anchors',
   await page.goto('/');
   await expect(page.locator('#home')).toBeVisible();
   await expect(page.locator('#reviews .rin-review-grid > .rin-review-card')).toHaveCount(8);
-  await expect(page.locator('#reviews .rin-review-card img')).toHaveCount(8);
+  await expect(page.locator('#reviews .rin-review-card img')).toHaveCount(0);
   await expect(page.locator('#reviews .rin-review-grid')).toHaveCSS('display', 'grid');
   await expect(page.locator('#reviews .rin-review-duplicate')).toHaveCount(0);
   const sectionOrder = await page.locator('main > section').evaluateAll(els => els.map(el => el.id).filter(Boolean));
