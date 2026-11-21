@@ -50,8 +50,8 @@ test('a tap and phone tilt rotate the helmet while the body stays anchored', asy
       return Math.abs(x - 50) > 15 && Math.abs(y - 50) > 15;
     })).toBe(true);
     expect(await body.boundingBox()).toEqual(before);
-    await expect.poll(() => scene.locator('video').evaluate(video => video.currentTime)).toBeGreaterThan(.25);
-    expect(requests).toContain('/heyrin-arms-mobile.mp4');
+    await expect.poll(() => scene.locator('img.hero-robot-arms').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    expect(requests).toContain('/heyrin-arms-mobile.webp');
     expect(requests).toContain('/heyrin-gaze-mobile.webp');
     expect(requests.filter(path => /spline|three|heyrin-(gaze|lit)-desktop|heyrin-arms\.mp4/i.test(path))).toEqual([]);
 

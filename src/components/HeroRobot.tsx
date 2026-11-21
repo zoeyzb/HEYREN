@@ -12,6 +12,7 @@ type OrientationWithPermission = typeof DeviceOrientationEvent & {
 export function HeroRobot() {
   const sceneRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
+  const armImageRef = useRef<HTMLImageElement>(null);
   const armsRef = useRef<HTMLVideoElement>(null);
   const posterRef = useRef<HTMLImageElement>(null);
   const greetRef = useRef<() => void>(() => {});
@@ -21,7 +22,8 @@ export function HeroRobot() {
     const head = headRef.current;
     const poster = posterRef.current;
     const arms = armsRef.current;
-    if (!scene || !head || !poster || !arms) return;
+    const armImage = armImageRef.current;
+    if (!scene || !head || !poster || !arms || !armImage) return;
 
     const hero = scene.closest('.hero-shell');
     const phone = window.matchMedia('(max-width: 767px)');
@@ -108,22 +110,40 @@ export function HeroRobot() {
       image.onerror = () => { if (atlas === image) atlas = undefined; };
       image.src = url;
     };
+    const useArmImage = () => {
+      if (!visible() || disposed) return;
+      if (!armImage.hasAttribute('src')) armImage.src = '/heyrin-arms-mobile.webp';
+      armImage.classList.add('is-playing');
+    };
     const syncArms = () => {
       if (!visible() || connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? '')) {
         arms.pause();
+        armImage.classList.remove('is-playing');
+        return;
+      }
+      if (phone.matches) {
+        arms.pause();
+        arms.classList.remove('is-playing');
+        useArmImage();
         return;
       }
       if (document.readyState !== 'complete') return;
-      const source = phone.matches ? '/heyrin-arms-mobile.mp4' : '/heyrin-arms.mp4';
-      if (arms.getAttribute('src') !== source) {
-        arms.classList.remove('is-playing');
-        arms.src = source;
-      }
+      if (!arms.hasAttribute('src')) arms.src = '/heyrin-arms.mp4';
       arms.muted = true;
-      if (arms.paused && !arms.error) void arms.play().catch(() => {});
+      if (arms.error) useArmImage();
+      else if (arms.paused) void arms.play().catch(error => {
+        if (error.name !== 'AbortError') useArmImage();
+      });
     };
-    const showArms = () => arms.classList.add('is-playing');
-    const hideArms = () => arms.classList.remove('is-playing');
+    const showArms = () => {
+      if (phone.matches) return;
+      arms.classList.add('is-playing');
+      armImage.classList.remove('is-playing');
+    };
+    const hideArms = () => {
+      arms.classList.remove('is-playing');
+      useArmImage();
+    };
     const onPosterLoad = () => loadAtlas();
     const sync = () => {
       hero?.classList.toggle('is-in-view', inView);
@@ -235,6 +255,7 @@ export function HeroRobot() {
           <img ref={posterRef} className="hero-robot-body" src="/heyrin-lit-desktop.webp" alt="" width={1152} height={900} fetchPriority="high" />
         </picture>
         <video ref={armsRef} className="hero-robot-arms" muted playsInline loop preload="none" disablePictureInPicture />
+        <img ref={armImageRef} className="hero-robot-arms" alt="" loading="lazy" decoding="async" />
         <div ref={headRef} className="hero-robot-head" />
       </div>
       <button type="button" className="hero-robot-greet" aria-label="Say hello to Heyrin's robot" onClick={() => greetRef.current()} />
